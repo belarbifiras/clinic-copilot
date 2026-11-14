@@ -8,13 +8,6 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class PatientClientConfig {
 
-    @Value("${patient.service.url:http://localhost:8090}")
-    private String patientServiceUrl;
-
-    @Bean
-    public RestClient patientRestClient() {
-        return RestClient.builder()
-
     @Bean
     public RestClient patientRestClient(
             RestClient.Builder builder,
@@ -23,4 +16,5 @@ public class PatientClientConfig {
                 .baseUrl(patientServiceUrl)
                 .build();
     }
+    
 }
