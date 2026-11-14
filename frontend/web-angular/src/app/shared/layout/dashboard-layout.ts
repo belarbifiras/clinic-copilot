@@ -1,8 +1,8 @@
-﻿import { Component, computed, effect, inject, input, signal } from '@angular/core';
+﻿import { Component, OnInit, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { LucideBell, LucideChevronsLeft, LucideLogOut, LucideUserRound } from '@lucide/angular';
 import { AuthService } from '../../core/auth/auth.service';
-import { MockStore } from '../../core/mock/mock-store';
+import { NotificationService } from '../../features/notifications/notification.service';
 import { Icon } from '../ui/icon';
 import { Logo } from './logo';
 
@@ -127,10 +127,10 @@ function readCollapsed(): boolean {
               <span class="hidden rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground lg:block">{{ today }}</span>
               @if (notificationsLink(); as nl) {
                 <a [routerLink]="nl" class="relative grid h-10 w-10 place-items-center rounded-full text-deep hover:bg-soft"
-                   [attr.aria-label]="'Notifications, ' + store.unreadCount() + ' non lues'">
+                   [attr.aria-label]="'Notifications, ' + unreadNotifs() + ' non lues'">
                   <app-icon [icon]="Bell" [size]="20" />
-                  @if (store.unreadCount() > 0) {
-                    <span class="absolute right-1 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold text-white">{{ store.unreadCount() }}</span>
+                  @if (unreadNotifs() > 0) {
+                    <span class="absolute right-1 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold text-white">{{ unreadNotifs() }}</span>
                   }
                 </a>
               }
@@ -173,9 +173,9 @@ function readCollapsed(): boolean {
     </div>
   `,
 })
-export class DashboardLayout {
+export class DashboardLayout implements OnInit {
   protected readonly auth = inject(AuthService);
-  protected readonly store = inject(MockStore);
+  private readonly notifSvc = inject(NotificationService);
 
   readonly links = input.required<NavItem[]>();
   readonly label = input('Espace');
@@ -189,6 +189,7 @@ export class DashboardLayout {
 
   protected readonly collapsed = signal(readCollapsed());
   protected readonly menuOpen = signal(false);
+  protected readonly unreadNotifs = signal(0);
 
   protected readonly today = (() => {
     const s = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -212,6 +213,10 @@ export class DashboardLayout {
         /* stockage indisponible : on ignore */
       }
     });
+  }
+
+  ngOnInit() {
+    this.notifSvc.unreadCount().subscribe((r) => this.unreadNotifs.set(r.count));
   }
 
   protected toggle() {

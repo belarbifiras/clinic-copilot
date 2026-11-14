@@ -1,16 +1,50 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   LucideArrowRight, LucideBuilding2, LucideCalendarDays, LucideCheck, LucideClock, LucideStar, LucideUsers, LucideVideo, LucideX,
 } from '@lucide/angular';
 import { dayHeading, initials, timeLabel } from '../../core/mock/format';
-import { MockStore } from '../../core/mock/mock-store';
-import { Appointment } from '../../core/mock/mock.models';
+import { AuthService } from '../../core/auth/auth.service';
+import { AppointmentService, AppointmentDTO } from '../patient/appointment.service';
 import { RevealDirective } from '../../shared/directives/reveal.directive';
 import { Icon } from '../../shared/ui/icon';
 import { Panel } from '../../shared/ui/panel';
 import { StatCard } from '../../shared/ui/stat-card';
 import { StatusBadge } from '../../shared/ui/status-badge';
+
+type ApptStatus = AppointmentDTO['status'];
+
+interface DoctorAppt {
+  id: string;
+  patientId: string;
+  patientName: string;
+  start: string;
+  durationMin: number;
+  reason: string;
+  mode: 'CABINET' | 'VIDEO';
+  status: ApptStatus;
+}
+
+function mapAppt(dto: AppointmentDTO): DoctorAppt {
+  const start = dto.startTime ?? '';
+  const end = dto.endTime ?? '';
+  let durationMin = 30;
+  try {
+    const s = new Date(start).getTime();
+    const e = new Date(end).getTime();
+    if (!isNaN(s) && !isNaN(e)) durationMin = Math.round((e - s) / 60000);
+  } catch { /* keep default */ }
+  return {
+    id: String(dto.id),
+    patientId: `p-${dto.patientId}`,
+    patientName: `Patient #${dto.patientId}`,
+    start,
+    durationMin,
+    reason: dto.reason ?? '',
+    mode: 'CABINET',
+    status: dto.status,
+  };
+}
 
 @Component({
   selector: 'app-doctor-home-page',
@@ -29,7 +63,7 @@ import { StatusBadge } from '../../shared/ui/status-badge';
           <div class="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-center">
             <div>
               <p class="text-sm font-medium text-deep-foreground/70">{{ today }}</p>
-              <h1 class="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">{{ greeting }}, <span class="text-tertiary">{{ name }}</span></h1>
+              <h1 class="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">{{ greeting }}, <span class="text-tertiary">{{ name() }}</span></h1>
               <p class="mt-3 max-w-md text-deep-foreground/70">{{ summary() }}</p>
               <div class="mt-6 flex flex-wrap gap-3">
                 <a routerLink="/espace-medecin/agenda" class="btn btn-hero btn-lg">Ouvrir l'agenda <app-icon [icon]="Arrow" [size]="16" /></a>
@@ -59,10 +93,10 @@ import { StatusBadge } from '../../shared/ui/status-badge';
         </section>
 
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <app-stat-card tone="primary" [icon]="Calendar" label="Aujourd'hui" [value]="today_().length" hint="rendez-vous" to="/espace-medecin/agenda" />
+          <app-stat-card tone="primary" [icon]="Calendar" label="Aujourd'hui" [value]="todayAppts().length" hint="rendez-vous" to="/espace-medecin/agenda" />
           <app-stat-card tone="warning" [icon]="Clock" label="En attente" [value]="pending().length" hint="à traiter" to="/espace-medecin/agenda" />
           <app-stat-card tone="info" [icon]="Users" label="Patients suivis" [value]="patientCount()" hint="au total" to="/espace-medecin/patients" />
-          <app-stat-card tone="success" [icon]="Star" label="Note moyenne" [value]="average()" hint="/ 5" to="/espace-medecin/avis" />
+          <app-stat-card tone="success" [icon]="Star" label="Agenda" [value]="allAppts().length" hint="ce mois" to="/espace-medecin/agenda" />
         </div>
 
         <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
@@ -106,8 +140,8 @@ import { StatusBadge } from '../../shared/ui/status-badge';
                       <p class="font-semibold text-deep">{{ a.patientName }}</p>
                       <p class="text-sm text-muted-foreground">{{ heading(a.start) }} · {{ time(a.start) }} · {{ a.reason }}</p>
                       <div class="mt-3 flex gap-2">
-                        <button type="button" class="btn btn-hero" (click)="set(a, 'CONFIRMED')"><app-icon [icon]="Check" [size]="16" />Confirmer</button>
-                        <button type="button" class="btn btn-soft" (click)="set(a, 'CANCELLED')"><app-icon [icon]="X" [size]="16" />Refuser</button>
+                        <button type="button" class="btn btn-hero" (click)="setStatus(a.id, 'CONFIRMED')"><app-icon [icon]="Check" [size]="16" />Confirmer</button>
+                        <button type="button" class="btn btn-soft" (click)="setStatus(a.id, 'CANCELLED')"><app-icon [icon]="X" [size]="16" />Refuser</button>
                       </div>
                     </li>
                   }
@@ -132,8 +166,9 @@ import { StatusBadge } from '../../shared/ui/status-badge';
     </div>
   `,
 })
-export class DoctorHomePage {
-  private readonly store = inject(MockStore);
+export class DoctorHomePage implements OnInit {
+  private readonly auth = inject(AuthService);
+  private readonly svc = inject(AppointmentService);
 
   protected readonly Arrow = LucideArrowRight;
   protected readonly Calendar = LucideCalendarDays;
@@ -145,10 +180,11 @@ export class DoctorHomePage {
   protected readonly Video = LucideVideo;
   protected readonly Building = LucideBuilding2;
 
-  protected readonly name = 'Dr Trabelsi';
   protected readonly heading = dayHeading;
   protected readonly time = timeLabel;
   protected readonly ini = initials;
+
+  protected readonly allAppts = signal<DoctorAppt[]>([]);
 
   protected readonly today = (() => {
     const s = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -159,39 +195,81 @@ export class DoctorHomePage {
     return h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir';
   })();
 
+  protected readonly name = computed(() => {
+    const s = this.auth.session();
+    if (!s) return 'Docteur';
+    try {
+      const payload = JSON.parse(atob(s.token.split('.')[1]));
+      return payload.firstName ?? payload.given_name ?? payload.name ?? s.email.split('@')[0];
+    } catch { return s.email.split('@')[0]; }
+  });
+
   private readonly startOfToday = (() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     return d;
   })();
 
-  private readonly active = computed(() => this.store.doctorAppointments().filter((a) => a.status === 'CONFIRMED' || a.status === 'PENDING'));
-  protected readonly today_ = computed(() => this.store.doctorAppointments().filter((a) => a.status !== 'CANCELLED' && new Date(a.start).toDateString() === new Date().toDateString()));
-  protected readonly pending = computed(() => this.store.doctorAppointments().filter((a) => a.status === 'PENDING'));
-  protected readonly next = computed(() => this.active().find((a) => new Date(a.start) >= this.startOfToday) ?? null);
-  protected readonly patientCount = computed(() => this.store.doctorPatients().length);
-  protected readonly average = computed(() => {
-    const list = this.store.doctorReviews();
-    return list.length ? (list.reduce((s, r) => s + r.rating, 0) / list.length).toFixed(1) : '–';
-  });
+  protected readonly todayAppts = computed(() =>
+    this.allAppts().filter((a) => a.status !== 'CANCELLED' && new Date(a.start).toDateString() === new Date().toDateString())
+  );
+  protected readonly pending = computed(() => this.allAppts().filter((a) => a.status === 'PENDING'));
+  protected readonly next = computed(() =>
+    this.allAppts()
+      .filter((a) => (a.status === 'CONFIRMED' || a.status === 'PENDING') && new Date(a.start) >= this.startOfToday)
+      .sort((x, y) => x.start.localeCompare(y.start))[0] ?? null
+  );
+  protected readonly patientCount = computed(() => new Set(this.allAppts().map((a) => a.patientId)).size);
 
   protected readonly timeline = computed(() => {
-    const todays = this.today_();
+    const todays = this.todayAppts();
     if (todays.length) return { title: 'Programme du jour', items: todays };
-    return { title: 'Prochains rendez-vous', items: this.active().filter((a) => new Date(a.start) >= this.startOfToday).slice(0, 4) };
+    const upcoming = this.allAppts()
+      .filter((a) => (a.status === 'CONFIRMED' || a.status === 'PENDING') && new Date(a.start) >= this.startOfToday)
+      .sort((x, y) => x.start.localeCompare(y.start))
+      .slice(0, 4);
+    return { title: 'Prochains rendez-vous', items: upcoming };
   });
 
   protected readonly summary = computed(() => {
-    const t = this.today_().length;
+    const t = this.todayAppts().length;
     const p = this.pending().length;
     return `${t} rendez-vous aujourd'hui · ${p} demande${p > 1 ? 's' : ''} en attente de confirmation.`;
   });
 
-  protected dot(a: Appointment): string {
+  ngOnInit() {
+    this.loadAppointments();
+  }
+
+  private getDoctorId(): number | null {
+    const session = this.auth.session();
+    if (!session) return null;
+    try {
+      const payload = JSON.parse(atob(session.token.split('.')[1]));
+      const id = payload.sub ?? payload.userId ?? payload.id;
+      const n = Number(id);
+      return isNaN(n) ? null : n;
+    } catch { return null; }
+  }
+
+  private loadAppointments() {
+    const doctorId = this.getDoctorId();
+    if (!doctorId) return;
+    const now = new Date();
+    const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const to = new Date(now.getFullYear(), now.getMonth() + 3, 0).toISOString();
+    this.svc.getByDoctor(doctorId, from, to).subscribe({
+      next: (list) => this.allAppts.set(list.map(mapAppt)),
+    });
+  }
+
+  protected dot(a: DoctorAppt): string {
     return a.status === 'CONFIRMED' ? 'bg-success' : a.status === 'PENDING' ? 'bg-warning' : 'bg-muted-foreground';
   }
 
-  protected set(a: Appointment, status: Appointment['status']) {
-    this.store.setStatus(a.id, status);
+  protected setStatus(id: string, status: 'CONFIRMED' | 'CANCELLED' | 'COMPLETED') {
+    this.svc.updateStatus(Number(id), status).subscribe({
+      next: (dto) => this.allAppts.update((l) => l.map((a) => a.id === id ? { ...a, status: dto.status } : a)),
+    });
   }
 }

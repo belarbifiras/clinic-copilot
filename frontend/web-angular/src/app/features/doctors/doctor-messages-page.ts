@@ -1,18 +1,26 @@
-﻿import { Component, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
+﻿import { Component, ElementRef, OnInit, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { LucideArrowLeft, LucideCheckCheck, LucideMessageCircle, LucidePhone, LucideSearch, LucideSend, LucideUserRound } from '@lucide/angular';
+import { LucideArrowLeft, LucideCheckCheck, LucideMessageCircle, LucideSearch, LucideSend, LucideUserRound } from '@lucide/angular';
 import { dayHeading, initials, timeLabel } from '../../core/mock/format';
-import { MockStore } from '../../core/mock/mock-store';
-import { ChatMessage, Conversation } from '../../core/mock/mock.models';
+import { AuthService } from '../../core/auth/auth.service';
+import { ChatService, ChatMsg } from '../../core/services/chat.service';
 import { avatarGradient } from '../../core/mock/palette';
 import { Icon } from '../../shared/ui/icon';
 import { PageHeader } from '../../shared/ui/page-header';
 
-type Item = { key: string; day?: string; msg?: ChatMessage };
 type Tab = 'all' | 'unread';
 
-const lastOf = (c: Conversation) => c.messages[c.messages.length - 1];
+interface LocalMsg { id: string; from: 'me' | 'them'; text: string; at: string }
+interface LocalConv { id: string; contactName: string; messages: LocalMsg[]; seen: boolean }
+type Item = { key: string; day?: string; msg?: LocalMsg };
+
+function mapMsg(msg: ChatMsg, myId: string): LocalMsg {
+  const at = (() => {
+    try { const d = new Date(msg.createdAt); return d.toISOString(); } catch { return new Date().toISOString(); }
+  })();
+  return { id: msg._id, from: msg.senderId === myId ? 'me' : 'them', text: msg.text, at };
+}
 
 @Component({
   selector: 'app-doctor-messages-page',
@@ -52,10 +60,10 @@ const lastOf = (c: Conversation) => c.messages[c.messages.length - 1];
                     <div class="min-w-0 flex-1">
                       <div class="flex items-baseline justify-between gap-2">
                         <p class="truncate text-deep" [class]="isUnread(c) ? 'font-bold' : 'font-semibold'">{{ c.contactName }}</p>
-                        <span class="shrink-0 text-xs text-muted-foreground">{{ time(last(c).at) }}</span>
+                        <span class="shrink-0 text-xs text-muted-foreground">{{ last(c) ? time(last(c)!.at) : '' }}</span>
                       </div>
                       <p class="truncate text-sm" [class]="isUnread(c) ? 'font-medium text-deep' : 'text-muted-foreground'">
-                        {{ last(c).from === 'me' ? 'Vous : ' : '' }}{{ last(c).text }}
+                        {{ last(c) ? (last(c)!.from === 'me' ? 'Vous : ' : '') + last(c)!.text : 'Nouvelle conversation' }}
                       </p>
                     </div>
                     @if (isUnread(c)) {
@@ -64,7 +72,9 @@ const lastOf = (c: Conversation) => c.messages[c.messages.length - 1];
                   </button>
                 </li>
               } @empty {
-                <li class="p-8 text-center text-sm text-muted-foreground">Aucune conversation.</li>
+                <li class="p-8 text-center text-sm text-muted-foreground">
+                  @if (loading()) { Chargement… } @else { Aucune conversation. }
+                </li>
               }
             </ul>
           </aside>
@@ -77,11 +87,8 @@ const lastOf = (c: Conversation) => c.messages[c.messages.length - 1];
                 <span class="grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-bold text-white" [class]="grad(c.contactName)">{{ ini(c.contactName) }}</span>
                 <div class="min-w-0 flex-1">
                   <p class="truncate font-semibold text-deep">{{ c.contactName }}</p>
-                  <p class="truncate text-xs text-muted-foreground">Patient{{ phone() ? ' · ' + phone() : '' }}</p>
+                  <p class="truncate text-xs text-muted-foreground">Patient</p>
                 </div>
-                @if (phone(); as p) {
-                  <a [href]="'tel:' + p.replace(' ', '')" class="btn btn-soft" aria-label="Appeler le patient"><app-icon [icon]="Phone" [size]="16" /><span class="hidden sm:inline">Appeler</span></a>
-                }
                 <a routerLink="/espace-medecin/patients" class="btn btn-ghost" aria-label="Voir mes patients"><app-icon [icon]="Profile" [size]="16" /><span class="hidden sm:inline">Dossier</span></a>
               </header>
 
@@ -103,15 +110,6 @@ const lastOf = (c: Conversation) => c.messages[c.messages.length - 1];
                       <span class="rounded-full bg-card px-3 py-1 text-xs font-medium text-muted-foreground shadow-soft">{{ it.day }}</span>
                     </div>
                   }
-                }
-                @if (typingHere()) {
-                  <div class="flex justify-start">
-                    <div class="flex items-center gap-1 rounded-2xl rounded-bl-md border border-border bg-card px-4 py-3 shadow-soft" role="status" aria-label="Le patient écrit">
-                      <span class="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/60"></span>
-                      <span class="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/60 [animation-delay:150ms]"></span>
-                      <span class="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/60 [animation-delay:300ms]"></span>
-                    </div>
-                  </div>
                 }
               </div>
 
@@ -144,21 +142,20 @@ const lastOf = (c: Conversation) => c.messages[c.messages.length - 1];
     </div>
   `,
 })
-export class DoctorMessagesPage {
-  protected readonly store = inject(MockStore);
+export class DoctorMessagesPage implements OnInit {
+  private readonly chatSvc = inject(ChatService);
+  private readonly auth = inject(AuthService);
 
   protected readonly Search = LucideSearch;
   protected readonly Send = LucideSend;
   protected readonly Back = LucideArrowLeft;
   protected readonly Checks = LucideCheckCheck;
-  protected readonly Phone = LucidePhone;
   protected readonly Profile = LucideUserRound;
   protected readonly Chat = LucideMessageCircle;
 
   protected readonly ini = initials;
   protected readonly time = timeLabel;
   protected readonly grad = avatarGradient;
-  protected readonly last = lastOf;
 
   protected readonly tabs: { id: Tab; label: string }[] = [
     { id: 'all', label: 'Toutes' },
@@ -173,37 +170,75 @@ export class DoctorMessagesPage {
 
   protected readonly query = signal('');
   protected readonly tab = signal<Tab>('all');
-  protected readonly selectedId = signal<string | null>('dc1');
+  protected readonly selectedId = signal<string | null>(null);
   protected readonly draft = signal('');
-  private readonly typingId = signal<string | null>(null);
-  private readonly seen = signal<ReadonlySet<string>>(new Set(['dc1']));
+  protected readonly loading = signal(true);
+  private readonly seen = signal<ReadonlySet<string>>(new Set<string>());
   private readonly scroller = viewChild<ElementRef<HTMLElement>>('scroller');
 
-  protected isUnread(c: Conversation): boolean {
-    const m = lastOf(c);
+  private readonly conversations = signal<LocalConv[]>([]);
+  private myId = '';
+
+  constructor() {
+    effect(() => {
+      this.items();
+      setTimeout(() => { const el = this.scroller()?.nativeElement; if (el) el.scrollTop = el.scrollHeight; });
+    });
+  }
+
+  ngOnInit() {
+    const session = this.auth.session();
+    if (session) {
+      try {
+        const payload = JSON.parse(atob(session.token.split('.')[1]));
+        this.myId = String(payload.sub ?? payload.userId ?? payload.id ?? '');
+      } catch { /* ignore */ }
+    }
+    this.loadConversations();
+  }
+
+  private loadConversations() {
+    this.loading.set(true);
+    this.chatSvc.getConversations().subscribe({
+      next: (list) => {
+        this.conversations.set(list.map((c) => ({
+          id: c._id,
+          contactName: c.contactName ?? `Patient`,
+          messages: [],
+          seen: false,
+        })));
+        this.loading.set(false);
+        // Auto-select first if any
+        if (list.length && !this.selectedId()) {
+          this.select(list[0]._id);
+        }
+      },
+      error: () => this.loading.set(false),
+    });
+  }
+
+  protected last(c: LocalConv): LocalMsg | undefined {
+    return c.messages[c.messages.length - 1];
+  }
+
+  protected isUnread(c: LocalConv): boolean {
+    const m = this.last(c);
     return !!m && m.from === 'them' && !this.seen().has(c.id) && c.id !== this.selectedId();
   }
 
-  protected readonly unreadCount = computed(() => this.store.doctorConversations().filter((c) => this.isUnread(c)).length);
+  protected readonly unreadCount = computed(() => this.conversations().filter((c) => this.isUnread(c)).length);
   protected readonly subtitle = computed(
-    () => `${this.store.doctorConversations().length} conversation(s) · ${this.unreadCount()} non lue(s)`,
+    () => `${this.conversations().length} conversation(s) · ${this.unreadCount()} non lue(s)`,
   );
 
   protected readonly list = computed(() => {
     const q = this.query().trim().toLowerCase();
-    return this.store
-      .doctorConversations()
-      .filter((c) => !q || c.contactName.toLowerCase().includes(q) || lastOf(c)?.text.toLowerCase().includes(q))
-      .filter((c) => this.tab() === 'all' || this.isUnread(c))
-      .sort((a, b) => (lastOf(b)?.at ?? '').localeCompare(lastOf(a)?.at ?? ''));
+    return this.conversations()
+      .filter((c) => !q || c.contactName.toLowerCase().includes(q) || (this.last(c)?.text ?? '').toLowerCase().includes(q))
+      .filter((c) => this.tab() === 'all' || this.isUnread(c));
   });
 
-  protected readonly current = computed(() => this.store.doctorConversations().find((c) => c.id === this.selectedId()) ?? null);
-  protected readonly typingHere = computed(() => !!this.current() && this.typingId() === this.current()!.id);
-  protected readonly phone = computed(() => {
-    const c = this.current();
-    return c ? (this.store.doctorPatients().find((p) => p.name === c.contactName)?.phone ?? null) : null;
-  });
+  protected readonly current = computed(() => this.conversations().find((c) => c.id === this.selectedId()) ?? null);
 
   protected readonly items = computed<Item[]>(() => {
     const c = this.current();
@@ -221,20 +256,22 @@ export class DoctorMessagesPage {
     return out;
   });
 
-  constructor() {
-    effect(() => {
-      this.items();
-      this.typingHere();
-      setTimeout(() => {
-        const el = this.scroller()?.nativeElement;
-        if (el) el.scrollTop = el.scrollHeight;
-      });
-    });
-  }
-
   protected select(id: string) {
     this.selectedId.set(id);
     this.seen.update((s) => new Set(s).add(id));
+    const conv = this.conversations().find((c) => c.id === id);
+    if (conv && conv.messages.length === 0) {
+      this.loadMessages(id);
+    }
+  }
+
+  private loadMessages(convId: string) {
+    this.chatSvc.getMessages(convId).subscribe({
+      next: (msgs) => {
+        const local = msgs.map((m) => mapMsg(m, this.myId));
+        this.conversations.update((l) => l.map((c) => c.id === convId ? { ...c, messages: local } : c));
+      },
+    });
   }
 
   protected onEnter(e: KeyboardEvent) {
@@ -252,20 +289,17 @@ export class DoctorMessagesPage {
     const c = this.current();
     const text = this.draft().trim();
     if (!c || !text) return;
-    this.store.sendDoctorMessage(c.id, text);
+    this.chatSvc.sendMessage({ conversationId: c.id, text }).subscribe({
+      next: (msg) => {
+        const local = mapMsg(msg, this.myId);
+        this.conversations.update((l) => l.map((cv) => cv.id === c.id ? { ...cv, messages: [...cv.messages, local] } : cv));
+      },
+      error: () => {
+        // Fallback local
+        const local: LocalMsg = { id: crypto.randomUUID(), from: 'me', text, at: new Date().toISOString() };
+        this.conversations.update((l) => l.map((cv) => cv.id === c.id ? { ...cv, messages: [...cv.messages, local] } : cv));
+      },
+    });
     this.draft.set('');
-    this.typingId.set(c.id);
-    // Réponse simulée du patient
-    setTimeout(() => {
-      this.store.sendDoctorMessage(c.id, 'Merci docteur, bien reçu.', 'them');
-      this.typingId.set(null);
-      if (this.selectedId() !== c.id) {
-        this.seen.update((s) => {
-          const n = new Set(s);
-          n.delete(c.id);
-          return n;
-        });
-      }
-    }, 1500);
   }
 }

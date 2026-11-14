@@ -1,10 +1,12 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   LucideArrowRight, LucideBell, LucideCalendarDays, LucideClock, LucideMessageCircle, LucideShieldCheck,
 } from '@lucide/angular';
 import { dayHeading, initials, timeLabel } from '../../core/mock/format';
-import { ME_PATIENT, MockStore } from '../../core/mock/mock-store';
+import { AuthService } from '../../core/auth/auth.service';
+import { NotificationService } from '../notifications/notification.service';
+import { PatientAppointments } from './patient-appointments';
 import { RevealDirective } from '../../shared/directives/reveal.directive';
 import { Icon } from '../../shared/ui/icon';
 import { Panel } from '../../shared/ui/panel';
@@ -19,7 +21,7 @@ import { StatusBadge } from '../../shared/ui/status-badge';
       <div class="mx-auto max-w-6xl space-y-6">
         <div appReveal>
           <div class="flex flex-wrap items-center gap-3">
-            <h1 class="text-2xl font-bold tracking-tight text-deep sm:text-3xl">Bonjour, {{ firstName }}</h1>
+            <h1 class="text-2xl font-bold tracking-tight text-deep sm:text-3xl">Bonjour, {{ firstName() }}</h1>
             <span class="rounded-full bg-soft px-3 py-1 text-xs font-semibold text-primary">Patient</span>
           </div>
           <p class="mt-1 text-muted-foreground">Prenez soin de vous, on est là pour vous guider.</p>
@@ -61,8 +63,8 @@ import { StatusBadge } from '../../shared/ui/status-badge';
 
         <div class="grid gap-4 sm:grid-cols-3">
           <app-stat-card tone="primary" [icon]="Calendar" label="Prochains rendez-vous" [value]="upcoming().length" hint="à venir" to="/espace-patient/rendez-vous" />
-          <app-stat-card tone="info" [icon]="Message" label="Messages à lire" [value]="unreadChats()" hint="nouveaux" to="/espace-patient/messages" />
-          <app-stat-card tone="warning" [icon]="Bell" label="Rappels" [value]="store.unreadCount()" hint="à voir" to="/espace-patient/rappels" />
+          <app-stat-card tone="info" [icon]="Message" label="Messages à lire" [value]="0" hint="nouveaux" to="/espace-patient/messages" />
+          <app-stat-card tone="warning" [icon]="Bell" label="Rappels" [value]="unreadNotifCount()" hint="à voir" to="/espace-patient/rappels" />
         </div>
 
         <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
@@ -81,7 +83,7 @@ import { StatusBadge } from '../../shared/ui/status-badge';
                       <p class="font-medium text-deep">{{ heading(a.start) }}</p>
                       <p class="flex items-center justify-end gap-1 text-muted-foreground"><app-icon [icon]="Clock" [size]="14" />{{ time(a.start) }}</p>
                     </div>
-                    <app-status-badge [status]="a.status" />
+                    <app-status-badge [status]="a.badgeStatus" />
                   </li>
                 }
               </ul>
@@ -113,8 +115,10 @@ import { StatusBadge } from '../../shared/ui/status-badge';
     </div>
   `,
 })
-export class PatientHomePage {
-  protected readonly store = inject(MockStore);
+export class PatientHomePage implements OnInit {
+  private readonly auth = inject(AuthService);
+  protected readonly apptSvc = inject(PatientAppointments);
+  private readonly notifSvc = inject(NotificationService);
 
   protected readonly Arrow = LucideArrowRight;
   protected readonly Bell = LucideBell;
@@ -123,10 +127,22 @@ export class PatientHomePage {
   protected readonly Message = LucideMessageCircle;
   protected readonly Shield = LucideShieldCheck;
 
-  protected readonly firstName = ME_PATIENT.name.split(' ')[0];
   protected readonly heading = dayHeading;
   protected readonly time = timeLabel;
   protected readonly ini = initials;
+
+  protected readonly unreadNotifCount = signal(0);
+
+  protected readonly firstName = computed(() => {
+    const s = this.auth.session();
+    if (!s) return 'Patient';
+    try {
+      const payload = JSON.parse(atob(s.token.split('.')[1]));
+      const firstName = payload.firstName ?? payload.given_name ?? payload.name ?? '';
+      if (firstName) return String(firstName).split(' ')[0];
+    } catch { /* ignore */ }
+    return s.email.split('@')[0];
+  });
 
   private readonly startOfToday = (() => {
     const d = new Date();
@@ -135,23 +151,30 @@ export class PatientHomePage {
   })();
 
   protected readonly upcoming = computed(() =>
-    this.store.myAppointments()
-      .filter((a) => (a.status === 'CONFIRMED' || a.status === 'PENDING') && new Date(a.start) >= this.startOfToday)
-      .slice(0, 3));
-
-  protected readonly unreadChats = computed(() =>
-    this.store.conversations().filter((c) => c.messages[c.messages.length - 1]?.from === 'them').length);
+    this.apptSvc.appointments()
+      .filter((a) => (a.status === 'confirme' || a.status === 'attente') && new Date(a.start) >= this.startOfToday)
+      .slice(0, 3)
+      .map((a) => {
+        const d = this.apptSvc.getDoctor(a.doctorId);
+        return {
+          ...a,
+          doctorName: d?.name ?? 'Médecin',
+          specialty: d?.specialty ?? 'Médecine générale',
+          badgeStatus: (a.status === 'confirme' ? 'CONFIRMED' : 'PENDING') as 'CONFIRMED' | 'PENDING',
+        };
+      })
+  );
 
   protected readonly reminders = computed(() => {
     const list: { title: string; detail: string }[] = [];
-    const confirmed = this.upcoming().find((a) => a.status === 'CONFIRMED');
+    const confirmed = this.upcoming().find((a) => a.status === 'confirme');
     if (confirmed) {
       list.push({
         title: `Rendez-vous ${dayHeading(confirmed.start).toLowerCase()} à ${timeLabel(confirmed.start)}`,
-        detail: `${confirmed.doctorName} · ${confirmed.mode === 'VIDEO' ? 'Téléconsultation' : 'Au cabinet'}`,
+        detail: `${confirmed.doctorName} · Au cabinet`,
       });
     }
-    const pending = this.upcoming().find((a) => a.status === 'PENDING');
+    const pending = this.upcoming().find((a) => a.status === 'attente');
     if (pending) {
       list.push({
         title: 'Demande en attente de confirmation',
@@ -161,4 +184,8 @@ export class PatientHomePage {
     if (!list.length) list.push({ title: "Aucun rappel aujourd'hui", detail: 'Profitez-en pour prendre soin de vous.' });
     return list;
   });
+
+  ngOnInit() {
+    this.notifSvc.unreadCount().subscribe((r) => this.unreadNotifCount.set(r.count));
+  }
 }

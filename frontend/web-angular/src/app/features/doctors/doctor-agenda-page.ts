@@ -1,13 +1,42 @@
-﻿import { Component, computed, inject, signal } from '@angular/core';
+﻿import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { LucideBuilding2, LucideCalendarDays, LucideCheck, LucideClock, LucideVideo, LucideX } from '@lucide/angular';
 import { dayHeading, initials, timeLabel } from '../../core/mock/format';
-import { MockStore } from '../../core/mock/mock-store';
-import { Appointment } from '../../core/mock/mock.models';
+import { AuthService } from '../../core/auth/auth.service';
+import { AppointmentService, AppointmentDTO } from '../patient/appointment.service';
 import { AppointmentCalendar } from '../../shared/ui/appointment-calendar';
 import { Icon } from '../../shared/ui/icon';
 import { PageHeader } from '../../shared/ui/page-header';
 import { Panel } from '../../shared/ui/panel';
 import { StatusBadge } from '../../shared/ui/status-badge';
+
+/** Adapte un AppointmentDTO backend pour l'AppointmentCalendar (qui attend format mock) */
+function toCalEvent(dto: AppointmentDTO): {
+  id: string; doctorId: string; doctorName: string; specialty: string;
+  patientId: string; patientName: string; start: string; durationMin: number;
+  reason: string; mode: 'CABINET' | 'VIDEO'; status: AppointmentDTO['status'];
+} {
+  const start = dto.startTime ?? '';
+  const end = dto.endTime ?? '';
+  let durationMin = 30;
+  try {
+    const s = new Date(start).getTime();
+    const e = new Date(end).getTime();
+    if (!isNaN(s) && !isNaN(e)) durationMin = Math.round((e - s) / 60000);
+  } catch { /* keep default */ }
+  return {
+    id: String(dto.id),
+    doctorId: `d-${dto.doctorId}`,
+    doctorName: '',
+    specialty: '',
+    patientId: `p-${dto.patientId}`,
+    patientName: `Patient #${dto.patientId}`,
+    start,
+    durationMin,
+    reason: dto.reason ?? '',
+    mode: 'CABINET',
+    status: dto.status,
+  };
+}
 
 @Component({
   selector: 'app-doctor-agenda-page',
@@ -26,6 +55,12 @@ import { StatusBadge } from '../../shared/ui/status-badge';
             Afficher les annulés
           </label>
         </div>
+
+        @if (loading()) {
+          <div class="space-y-3 animate-pulse">
+            <div class="h-64 rounded-2xl bg-muted"></div>
+          </div>
+        }
 
         <div class="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
           <section class="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
@@ -52,11 +87,11 @@ import { StatusBadge } from '../../shared/ui/status-badge';
 
                 <div class="mt-5 flex flex-wrap gap-2">
                   @if (a.status === 'PENDING') {
-                    <button type="button" class="btn btn-hero" (click)="set(a, 'CONFIRMED')"><app-icon [icon]="Check" [size]="16" />Confirmer</button>
-                    <button type="button" class="btn btn-soft" (click)="set(a, 'CANCELLED')"><app-icon [icon]="X" [size]="16" />Refuser</button>
+                    <button type="button" class="btn btn-hero" (click)="setStatus(a.id, 'CONFIRMED')"><app-icon [icon]="Check" [size]="16" />Confirmer</button>
+                    <button type="button" class="btn btn-soft" (click)="setStatus(a.id, 'CANCELLED')"><app-icon [icon]="X" [size]="16" />Refuser</button>
                   } @else if (a.status === 'CONFIRMED') {
-                    <button type="button" class="btn btn-hero" (click)="set(a, 'COMPLETED')"><app-icon [icon]="Check" [size]="16" />Marquer terminé</button>
-                    <button type="button" class="btn btn-soft" (click)="set(a, 'CANCELLED')">Annuler</button>
+                    <button type="button" class="btn btn-hero" (click)="setStatus(a.id, 'COMPLETED')"><app-icon [icon]="Check" [size]="16" />Marquer terminé</button>
+                    <button type="button" class="btn btn-soft" (click)="setStatus(a.id, 'CANCELLED')">Annuler</button>
                   }
                 </div>
               </app-panel>
@@ -72,8 +107,8 @@ import { StatusBadge } from '../../shared/ui/status-badge';
                         <p class="text-sm text-muted-foreground">{{ heading(a.start) }} · {{ time(a.start) }}</p>
                       </button>
                       <div class="mt-3 flex gap-2">
-                        <button type="button" class="btn btn-hero" (click)="set(a, 'CONFIRMED')"><app-icon [icon]="Check" [size]="16" />Confirmer</button>
-                        <button type="button" class="btn btn-soft" (click)="set(a, 'CANCELLED')"><app-icon [icon]="X" [size]="16" />Refuser</button>
+                        <button type="button" class="btn btn-hero" (click)="setStatus(a.id, 'CONFIRMED')"><app-icon [icon]="Check" [size]="16" />Confirmer</button>
+                        <button type="button" class="btn btn-soft" (click)="setStatus(a.id, 'CANCELLED')"><app-icon [icon]="X" [size]="16" />Refuser</button>
                       </div>
                     </li>
                   }
@@ -88,8 +123,9 @@ import { StatusBadge } from '../../shared/ui/status-badge';
     </div>
   `,
 })
-export class DoctorAgendaPage {
-  private readonly store = inject(MockStore);
+export class DoctorAgendaPage implements OnInit {
+  private readonly auth = inject(AuthService);
+  private readonly svc = inject(AppointmentService);
 
   protected readonly Calendar = LucideCalendarDays;
   protected readonly Clock = LucideClock;
@@ -104,13 +140,54 @@ export class DoctorAgendaPage {
 
   protected readonly showCancelled = signal(false);
   protected readonly selectedId = signal<string | null>(null);
+  protected readonly loading = signal(true);
+
+  private readonly allAppointments = signal<ReturnType<typeof toCalEvent>[]>([]);
 
   protected readonly events = computed(() =>
-    this.store.doctorAppointments().filter((a) => this.showCancelled() || a.status !== 'CANCELLED'));
-  protected readonly pending = computed(() => this.store.doctorAppointments().filter((a) => a.status === 'PENDING'));
-  protected readonly selected = computed(() => this.store.doctorAppointments().find((a) => a.id === this.selectedId()) ?? null);
+    this.allAppointments().filter((a) => this.showCancelled() || a.status !== 'CANCELLED')
+  );
+  protected readonly pending = computed(() => this.allAppointments().filter((a) => a.status === 'PENDING'));
+  protected readonly selected = computed(() => this.allAppointments().find((a) => a.id === this.selectedId()) ?? null);
 
-  protected set(a: Appointment, status: Appointment['status']) {
-    this.store.setStatus(a.id, status);
+  ngOnInit() {
+    this.loadAppointments();
+  }
+
+  private getDoctorId(): number | null {
+    const session = this.auth.session();
+    if (!session) return null;
+    try {
+      const payload = JSON.parse(atob(session.token.split('.')[1]));
+      const id = payload.sub ?? payload.userId ?? payload.id;
+      const n = Number(id);
+      return isNaN(n) ? null : n;
+    } catch { return null; }
+  }
+
+  private loadAppointments() {
+    const doctorId = this.getDoctorId();
+    if (!doctorId) {
+      this.loading.set(false);
+      return;
+    }
+    const now = new Date();
+    const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const to = new Date(now.getFullYear(), now.getMonth() + 3, 0).toISOString();
+    this.svc.getByDoctor(doctorId, from, to).subscribe({
+      next: (list) => {
+        this.allAppointments.set(list.map(toCalEvent));
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
+    });
+  }
+
+  protected setStatus(id: string, status: 'CONFIRMED' | 'CANCELLED' | 'COMPLETED') {
+    this.svc.updateStatus(Number(id), status).subscribe({
+      next: (dto) => {
+        this.allAppointments.update((l) => l.map((a) => a.id === id ? { ...a, status: dto.status } : a));
+      },
+    });
   }
 }
