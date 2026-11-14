@@ -97,13 +97,6 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-<<<<<<< HEAD
-        loadComponent: () => import('./features/admin/admin-page').then((m) => m.AdminPage),
-        title: 'Vérification des médecins · Clinic Copilot',
-      },
-    ],
-  },
-=======
         loadComponent: () => import('./features/admin/admin-home-page').then((m) => m.AdminHomePage),
         title: 'Administration · Clinic Copilot',
       },
@@ -130,7 +123,6 @@ export const routes: Routes = [
     ],
   },
   { path: 'espace-admin', redirectTo: 'admin', pathMatch: 'full' },
->>>>>>> origin/main
 
   // ───────────── ESPACE MÉDECIN ─────────────
   {

@@ -134,11 +134,8 @@ import { daySlots, formatLongDate, isBookableDay, nextAvailable, parseLocal } fr
               @if (error()) {
                 <p role="alert" class="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm font-medium text-destructive"><app-icon [icon]="Alert" [size]="16" />{{ error() }}</p>
               }
-<<<<<<< HEAD
-=======
             }
             @if (!done()) {
->>>>>>> origin/main
               <div modalFooter class="contents">
                 <button type="button" class="btn btn-ghost" (click)="start.set(null)">Annuler</button>
                 <button type="button" class="btn btn-hero" [disabled]="busy()" (click)="confirm()">{{ busy() ? 'Réservation…' : 'Confirmer le rendez-vous' }}</button>
@@ -224,8 +221,4 @@ export class DoctorDetailPage {
     this.done.set(true);
     this.toasts.success('Rendez-vous confirmé', `${d.name} · ${formatLongDate(s)}`);
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/main

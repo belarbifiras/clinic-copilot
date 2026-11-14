@@ -5,8 +5,6 @@ import { API_BASE_URL } from '../../core/api.config';
 
 export type Verification = 'PENDING' | 'VERIFIED' | 'REJECTED';
 export type Professional = 'ACTIVE' | 'ON_LEAVE' | 'INACTIVE' | 'SUSPENDED';
-<<<<<<< HEAD
-=======
 export type AuditKind = 'AUTH' | 'DOCTOR' | 'REVIEW' | 'USER';
 export type UserRole = 'ADMIN' | 'DOCTOR' | 'PATIENT';
 export type ReviewModerationStatus = 'PUBLISHED' | 'HIDDEN';
@@ -43,7 +41,6 @@ export interface AuditEntry {
   action: string;
   target: string;
 }
->>>>>>> origin/main
 
 export interface AdminDoctorSummary {
   id: string;
@@ -108,9 +105,6 @@ export class AdminService {
   file(diplomaId: string): Observable<Blob> {
     return this.http.get(`${this.base}/diplomas/${diplomaId}/file`, { responseType: 'blob' });
   }
-<<<<<<< HEAD
-}
-=======
 
   audit(): Observable<AuditEntry[]> {
     return this.http.get<AuditEntry[]>(`${this.base}/audit`);
@@ -150,4 +144,3 @@ export class AdminService {
     return this.http.patch<AdminReview>(`${this.base}/reviews/${reviewId}/publish`, {});
   }
 }
->>>>>>> origin/main

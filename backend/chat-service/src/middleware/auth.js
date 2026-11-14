@@ -26,14 +26,6 @@ function auth(req, res, next) {
     } catch (err) {
         res.status(401).json({ message: 'Token invalide' });
     }
-
-
-
-    const payload = jwt.verify(token, secret, { algorithms: ['HS256', 'HS384', 'HS512'] });
-    return {
-        id: String(payload.userId ?? payload.id ?? payload.sub),
-        role: payload.role ?? null,
-    };
 }
 
 module.exports = { auth, verifyToken };

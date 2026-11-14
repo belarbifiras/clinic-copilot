@@ -82,6 +82,14 @@ spring:
               predicates:
                 - Path=/api/availability/**
 
+            # Notifications
+            - id: notifications
+              uri: ${NOTIFICATION_SERVICE_URL:${NOTIFICATION_URL:http://localhost:8087}}
+              predicates:
+                - Path=/api/notifications/**
+              filters:
+                - StripPrefix=1
+
             # Dossiers médicaux & consultations
             - id: medical-records
               uri: ${MEDICAL_RECORDS_URL:http://localhost:8086}
