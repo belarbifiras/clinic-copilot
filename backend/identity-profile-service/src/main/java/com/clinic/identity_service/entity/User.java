@@ -10,15 +10,16 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@NoArgsConstructor 
-@AllArgsConstructor 
-@Getter 
-@Setter 
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 @Entity
 @Table(name = "users")
 public class User {
 
-    @Id @GeneratedValue(strategy = GenerationType.UUID)
+    // Same id as the Keycloak user (the "sub" claim in the token)
+    @Id
     private UUID userId;
 
     @Column(nullable = false)
@@ -31,9 +32,6 @@ public class User {
     private String email;
 
     @Column(nullable = false)
-    private String password;
-
-    @Column(nullable = false)
     private LocalDate dateOfBirth;
 
     @Column(nullable = false, updatable = false)
@@ -41,7 +39,7 @@ public class User {
 
     @Enumerated(EnumType.STRING) @Column(nullable = false)
     private Role role;
-    
+
     @PrePersist
     public void onCreate() {
         createdAt = LocalDateTime.now();
@@ -49,5 +47,4 @@ public class User {
 
     @Column(nullable = false)
     private Boolean isActive;
-
 }

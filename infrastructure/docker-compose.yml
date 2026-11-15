@@ -62,6 +62,25 @@ services:
       - "15672:15672"
 
   # -------------------------
+  # KEYCLOAK (identity provider)
+  # -------------------------
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.8
+    command: start-dev --import-realm
+    restart: unless-stopped
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HOSTNAME: http://localhost:8180
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET}
+    ports:
+      - "8180:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+      - ./keycloak:/opt/keycloak/data/import:ro
+  
+  # -------------------------
   # API GATEWAY
   # -------------------------
 
@@ -116,9 +135,17 @@ services:
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_URL: jdbc:postgresql://postgres:5432/clinic_identity
-      JWT_SECRET: ${JWT_SECRET}
       PATIENT_SERVICE_URL: http://patient-profile-service:8090
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET}
       JAVA_TOOL_OPTIONS: -Xmx256m
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
 
   patient-profile-service:
     <<: *spring-common
@@ -242,3 +269,4 @@ volumes:
   pgdata:
   chat_mongo_data:
   diplomas_data:
+  keycloak_data:
