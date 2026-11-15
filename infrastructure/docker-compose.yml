@@ -8,7 +8,6 @@ x-spring-common: &spring-common
     DB_USER: ${POSTGRES_USER}
     DB_PASSWORD: ${POSTGRES_PASSWORD}
     JAVA_TOOL_OPTIONS: -Xmx256m
-    CLINIC_ADMIN_PASSWORD: ${CLINIC_ADMIN_PASSWORD}
   depends_on:
     postgres:
       condition: service_healthy
@@ -75,11 +74,7 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KC_HOSTNAME: http://localhost:8180
       KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET}
-    ports:
-      - "8180:8080"
-    volumes:
-      - keycloak_data:/opt/keycloak/data
-      - ./keycloak:/opt/keycloak/data/import:ro
+      CLINIC_ADMIN_PASSWORD: ${CLINIC_ADMIN_PASSWORD}
   
   # -------------------------
   # API GATEWAY
