@@ -53,8 +53,14 @@ public class KeycloakAdminService {
             String path = response.getLocation().getPath();
             String id = path.substring(path.lastIndexOf('/') + 1);
 
-            var roleRep = keycloak.realm(realm).roles().get(role.name()).toRepresentation();
-            keycloak.realm(realm).users().get(id).roles().realmLevel().add(List.of(roleRep));
+            try {
+                var roleRep = keycloak.realm(realm).roles().get(role.name()).toRepresentation();
+                keycloak.realm(realm).users().get(id).roles().realmLevel().add(List.of(roleRep));
+            } catch (RuntimeException e) {
+                // do not leave a user without a role in Keycloak
+                keycloak.realm(realm).users().get(id).remove();
+                throw e;
+            }
 
             return UUID.fromString(id);
         }

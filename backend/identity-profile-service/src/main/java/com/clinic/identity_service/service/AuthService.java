@@ -23,7 +23,10 @@ public class AuthService {
 
     public User registerUser(RegisterRequest request) {
 
-        if (userRepository.existsByEmail(request.email())) {
+        // Keycloak lowercases emails, so normalize here to keep both stores identical.
+        String email = request.email().trim().toLowerCase();
+
+        if (userRepository.existsByEmail(email)) {
             throw new ExistedByMailException("User with this email already exists.");
         }
 
@@ -36,14 +39,14 @@ public class AuthService {
 
         UUID keycloakId = keycloakAdminService.createUser(
                 request.firstName(), request.lastName(),
-                request.email(), request.password(), role);
+                email, request.password(), role);
 
         try {
             User user = new User();
             user.setUserId(keycloakId);
             user.setFirstName(request.firstName());
             user.setLastName(request.lastName());
-            user.setEmail(request.email());
+            user.setEmail(email);
             user.setRole(role);
             user.setIsActive(true);
             user.setDateOfBirth(request.dateOfBirth());

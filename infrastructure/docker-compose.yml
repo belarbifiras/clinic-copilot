@@ -8,6 +8,7 @@ x-spring-common: &spring-common
     DB_USER: ${POSTGRES_USER}
     DB_PASSWORD: ${POSTGRES_PASSWORD}
     JAVA_TOOL_OPTIONS: -Xmx256m
+    CLINIC_ADMIN_PASSWORD: ${CLINIC_ADMIN_PASSWORD}
   depends_on:
     postgres:
       condition: service_healthy

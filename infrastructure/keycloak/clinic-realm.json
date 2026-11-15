@@ -44,6 +44,22 @@
       "clientRoles": {
         "realm-management": ["manage-users", "view-users", "query-users"]
       }
+    },
+    {
+      "username": "admin@clinic.tn",
+      "email": "admin@clinic.tn",
+      "firstName": "Clinic",
+      "lastName": "Admin",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": ["ADMIN"],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${CLINIC_ADMIN_PASSWORD}",
+          "temporary": false
+        }
+      ]
     }
   ]
 }
