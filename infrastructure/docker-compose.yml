@@ -75,6 +75,11 @@ services:
       KC_HOSTNAME: http://localhost:8180
       KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET}
       CLINIC_ADMIN_PASSWORD: ${CLINIC_ADMIN_PASSWORD}
+    ports:
+      - "8180:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+      - ./keycloak:/opt/keycloak/data/import:ro
   
   # -------------------------
   # API GATEWAY
