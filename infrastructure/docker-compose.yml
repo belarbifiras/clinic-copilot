@@ -159,9 +159,9 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_URL: jdbc:postgresql://postgres:5432/clinic_patients
       SERVER_PORT: 8090
-      JWT_SECRET: ${JWT_SECRET}
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
       JAVA_TOOL_OPTIONS: -Xmx256m
-      JWT_SECRET_BASE64: "true"
 
   doctor-directory-service:
     <<: *spring-common
