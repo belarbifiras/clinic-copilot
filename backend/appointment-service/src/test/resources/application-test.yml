@@ -17,3 +17,7 @@ spring:
     listener:
       simple:
         auto-startup: false
+security:
+  jwt:
+    # Test-only 256-bit key; never use this value outside the test profile.
+    secret: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=

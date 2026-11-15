@@ -50,8 +50,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String userId = claims.getSubject();
             String role = claims.get("role", String.class);
 
-            List<SimpleGrantedAuthority> authorities = (role != null)
-                    ? List.of(new SimpleGrantedAuthority("ROLE_" + role))
+            String normalizedRole = role == null ? null : role.trim().toUpperCase(java.util.Locale.ROOT);
+            if (normalizedRole != null && normalizedRole.startsWith("ROLE_")) {
+                normalizedRole = normalizedRole.substring("ROLE_".length());
+            }
+            List<SimpleGrantedAuthority> authorities = (normalizedRole != null && !normalizedRole.isBlank())
+                    ? List.of(new SimpleGrantedAuthority("ROLE_" + normalizedRole))
                     : List.of();
 
             var auth = new UsernamePasswordAuthenticationToken(userId, null, authorities);
@@ -60,7 +64,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 SecurityContextHolder.clearContext();
             }
         }
-
-        filterChain.doFilter(request, response);
+       filterChain.doFilter(request, response);
     }
 }

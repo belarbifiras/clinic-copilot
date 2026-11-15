@@ -49,6 +49,15 @@ public class AvailabilityController {
         return ResponseEntity.ok(slotGenerationService.getSlots(doctorId, date, status));
     }
 
+    /** Generates the bookable slots for a doctor and calendar date. */
+    @PostMapping("/doctors/{doctorId}/slots/generate")
+    public ResponseEntity<Void> generateSlots(
+            @PathVariable Long doctorId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        slotGenerationService.generateSlotsForDoctor(doctorId, date);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/doctors/{doctorId}/exceptions")
     public ResponseEntity<AvailabilityExceptionDTO> addException(
             @PathVariable Long doctorId,
