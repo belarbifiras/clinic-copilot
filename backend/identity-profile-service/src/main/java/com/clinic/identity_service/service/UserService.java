@@ -11,13 +11,14 @@ import com.clinic.identity_service.entity.User;
 import com.clinic.identity_service.exception.UserNotFoundException;
 import com.clinic.identity_service.repository.UserRepository;
 
-
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final KeycloakAdminService keycloakAdminService;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, KeycloakAdminService keycloakAdminService) {
         this.userRepository = userRepository;
+        this.keycloakAdminService = keycloakAdminService;
     }
 
     @Transactional(readOnly = true)
@@ -28,22 +29,25 @@ public class UserService {
                 .toList();
     }
 
-    @Transactional 
+    @Transactional
     public void deactivateUser(UUID userId) {
         User user = getUserById(userId);
         user.setIsActive(false);
+        keycloakAdminService.setEnabled(userId, false);
     }
 
-    @Transactional 
+    @Transactional
     public void activateUser(UUID userId) {
         User user = getUserById(userId);
         user.setIsActive(true);
+        keycloakAdminService.setEnabled(userId, true);
     }
 
-    @Transactional 
-    public void deleteUser(UUID userId)  {
+    @Transactional
+    public void deleteUser(UUID userId) {
         User user = getUserById(userId);
         userRepository.delete(user);
+        keycloakAdminService.deleteUser(userId);
     }
 
     private User getUserById(UUID userId) {

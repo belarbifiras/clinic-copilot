@@ -1,0 +1,65 @@
+{
+  "realm": "clinic",
+  "enabled": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "registrationAllowed": false,
+  "roles": {
+    "realm": [
+      { "name": "ADMIN", "description": "Administrator" },
+      { "name": "PATIENT", "description": "Patient" },
+      { "name": "DOCTOR", "description": "Doctor" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "identity-service",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "${KEYCLOAK_ADMIN_CLIENT_SECRET}",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true
+    },
+    {
+      "clientId": "clinic-web",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://localhost:4200/*"],
+      "webOrigins": ["http://localhost:4200"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "service-account-identity-service",
+      "enabled": true,
+      "serviceAccountClientId": "identity-service",
+      "clientRoles": {
+        "realm-management": ["manage-users", "view-users", "query-users"]
+      }
+    },
+    {
+      "username": "admin@clinic.tn",
+      "email": "admin@clinic.tn",
+      "firstName": "Clinic",
+      "lastName": "Admin",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": ["ADMIN"],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${CLINIC_ADMIN_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}
