@@ -1,0 +1,30 @@
+CREATE TABLE triage_session (
+    id                           UUID PRIMARY KEY,
+    patient_ref                  VARCHAR(64)  NOT NULL,
+    status                       VARCHAR(32)  NOT NULL,
+    language                     VARCHAR(5)   NOT NULL,
+    symptoms                     TEXT         NOT NULL,
+    age                          INTEGER,
+    sex                          VARCHAR(16),
+    allergies_json               TEXT,
+    history_json                 TEXT,
+    duration_days                INTEGER,
+    intensity                    INTEGER,
+    clarification_questions_json TEXT,
+    clarification_answers_json   TEXT,
+    urgency_level                VARCHAR(2),
+    source                       VARCHAR(16),
+    confidence                   DOUBLE PRECISION,
+    recommended_specialty        VARCHAR(80),
+    result_json                  TEXT,
+    model_name                   VARCHAR(100),
+    model_digest                 VARCHAR(100),
+    prompt_version               VARCHAR(32),
+    fallback_reason              VARCHAR(32),
+    admin_alerted                BOOLEAN      NOT NULL DEFAULT FALSE,
+    precaution_adjustments       TEXT,
+    created_at                   TIMESTAMPTZ  NOT NULL,
+    updated_at                   TIMESTAMPTZ  NOT NULL
+);
+
+CREATE INDEX idx_triage_session_patient ON triage_session (patient_ref, created_at DESC);

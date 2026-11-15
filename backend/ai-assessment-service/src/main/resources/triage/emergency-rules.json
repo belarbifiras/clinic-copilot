@@ -1,0 +1,64 @@
+{
+  "version": "emergency-rules-v0-draft",
+  "reviewStatus": "DRAFT_TO_BE_VALIDATED_BY_A_PHYSICIAN",
+  "rules": [
+    {
+      "id": "CHEST_PAIN",
+      "patterns": [
+        "douleur thoracique", "douleurs thoraciques", "douleur dans la poitrine", "douleur a la poitrine",
+        "oppression thoracique", "serrement dans la poitrine", "mal a la poitrine",
+        "chest pain", "chest tightness", "pain in my chest", "pressure in my chest",
+        "ألم في الصدر", "وجع في الصدر", "ضيق في الصدر", "الم صدري", "وجع صدر"
+      ],
+      "wholeWords": []
+    },
+    {
+      "id": "BREATHING_DIFFICULTY",
+      "patterns": [
+        "difficulte a respirer", "difficultes respiratoires", "arrive pas a respirer", "arrive plus a respirer",
+        "souffle coupe", "detresse respiratoire", "essoufflement au repos", "manque d air",
+        "cannot breathe", "can t breathe", "difficulty breathing", "shortness of breath", "trouble breathing",
+        "صعوبة في التنفس", "ضيق في التنفس", "لا استطيع التنفس", "ما نقدرش نتنفس", "مانقدرش نتنفس"
+      ],
+      "wholeWords": []
+    },
+    {
+      "id": "LOSS_OF_CONSCIOUSNESS",
+      "patterns": [
+        "perte de connaissance", "perdu connaissance", "evanoui", "evanouissement", "inconscient",
+        "ne reagit plus", "loss of consciousness", "passed out", "unconscious", "fainted",
+        "فقدان الوعي", "فقد الوعي", "اغماء", "اغمي عليه", "مغمى عليه"
+      ],
+      "wholeWords": []
+    },
+    {
+      "id": "HEAVY_BLEEDING",
+      "patterns": [
+        "hemorragie", "saignement abondant", "saignement important", "saigne beaucoup", "saigne abondamment",
+        "heavy bleeding", "bleeding heavily", "won t stop bleeding", "bleeding a lot",
+        "نزيف حاد", "نزيف شديد", "نزيف غزير", "ينزف بغزارة"
+      ],
+      "wholeWords": []
+    },
+    {
+      "id": "STROKE_SIGNS",
+      "patterns": [
+        "visage qui tombe", "paralysie d un cote", "faiblesse d un cote", "difficulte a parler",
+        "trouble de la parole", "parole confuse", "bouche de travers",
+        "face drooping", "slurred speech", "weakness on one side", "one side of my body", "sudden numbness",
+        "شلل في جانب", "ضعف في جانب واحد", "صعوبة في الكلام", "التواء الفم", "تدلي الوجه"
+      ],
+      "wholeWords": ["avc", "stroke"]
+    },
+    {
+      "id": "SUICIDAL_THOUGHTS",
+      "patterns": [
+        "idees suicidaires", "envie de mourir", "veux mourir", "me suicider", "suicide",
+        "mettre fin a ma vie", "mettre fin a mes jours",
+        "want to die", "kill myself", "end my life", "suicidal",
+        "انتحار", "اريد ان اموت", "اقتل نفسي", "انهي حياتي", "نحب نموت"
+      ],
+      "wholeWords": []
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+# Fichier PERSONNEL de développement (ne modifie pas infrastructure/docker-compose.yml).
+# Il publie le port du service IA pour pouvoir le tester directement depuis Windows.
+# Usage (PowerShell, dossier infrastructure) :
+#   docker compose -f docker-compose.yml -f ../backend/ai-assessment-service/docker-compose.ai-dev.yml up -d --build --no-deps ai-assessment-service
+services:
+  ai-assessment-service:
+    ports:
+      - "8090:8080"
