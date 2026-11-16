@@ -4,6 +4,7 @@
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
   "registrationAllowed": false,
+  "accessTokenLifespan": 3600,
   "roles": {
     "realm": [
       { "name": "ADMIN", "description": "Administrator" },
@@ -28,9 +29,9 @@
       "protocol": "openid-connect",
       "publicClient": true,
       "standardFlowEnabled": true,
-      "directAccessGrantsEnabled": false,
-      "redirectUris": ["http://localhost:4200/*"],
-      "webOrigins": ["http://localhost:4200"],
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["http://localhost:4200/*", "http://localhost:4300/*"],
+      "webOrigins": ["http://localhost:4200", "http://localhost:4300"],
       "attributes": {
         "pkce.code.challenge.method": "S256"
       }
