@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.clinic.identity_service.dto.AdminRegisterRequest;
 import com.clinic.identity_service.dto.DoctorRegisterRequest;
+import com.clinic.identity_service.dto.LoginRequest;
+import com.clinic.identity_service.dto.LoginResponse;
 import com.clinic.identity_service.dto.PatientRegisterRequest;
 import com.clinic.identity_service.service.AuthService;
 
@@ -27,7 +29,7 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @PostMapping("register-as-a-patient")
+    @PostMapping("/register-as-a-patient")
     public ResponseEntity<Map<String, UUID>> registerPatient(
         @Valid @RequestBody PatientRegisterRequest request
     ) {
@@ -35,7 +37,7 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", id));
     }
 
-    @PostMapping("resgister-as-a-doctor")
+    @PostMapping("/resgister-as-a-doctor")
     public ResponseEntity<Map<String, UUID>> registerDoctor(
         @Valid @RequestBody DoctorRegisterRequest request
     ) {
@@ -43,7 +45,7 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", id));
     }
 
-    @PostMapping("create-admin")
+    @PostMapping("/create-admin")
     public ResponseEntity<Map<String, UUID>> createAdmin(
         @Valid @RequestBody AdminRegisterRequest request
     ) {
@@ -51,5 +53,13 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", id));
     }
 
-    
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody LoginRequest request
+    ) {
+        LoginResponse response = authService.login(request);
+        return ResponseEntity.ok(response);
+    }
+
+
 }
