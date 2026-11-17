@@ -37,7 +37,7 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", id));
     }
 
-    @PostMapping("/resgister-as-a-doctor")
+    @PostMapping("/register-as-a-doctor")
     public ResponseEntity<Map<String, UUID>> registerDoctor(
         @Valid @RequestBody DoctorRegisterRequest request
     ) {

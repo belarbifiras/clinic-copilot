@@ -59,8 +59,8 @@ public class AuthService {
         EntityManager entityManager,
         @Value("${keycloak.realm}") String realm,
         @Value("${keycloak.server-url}") String keycloakServerUrl,
-        @Value("${keycloak.auth-client-id}") String authClientId,
-        @Value("${keycloak.auth-client-secret}") String authClientSecret
+        @Value("${keycloak.admin-client-id}") String authClientId,
+        @Value("${keycloak.admin-client-secret}") String authClientSecret
     ) {
         this.keycloak = keycloak;
         this.doctorRepository = doctorRepository;

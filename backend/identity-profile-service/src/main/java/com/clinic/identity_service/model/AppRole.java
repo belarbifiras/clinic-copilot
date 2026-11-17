@@ -1,9 +1,10 @@
+
 package com.clinic.identity_service.model;
 
 public enum AppRole {
-    PATIENT("patient"),
-    DOCTOR("doctor"),
-    ADMIN("admin");
+    PATIENT("PATIENT"),
+    DOCTOR("DOCTOR"),
+    ADMIN("ADMIN");
 
     private final String keycloakName;
 
