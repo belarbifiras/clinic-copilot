@@ -1,35 +1,29 @@
 package com.clinic.doctor_directory_service.common.security;
 
-import java.nio.charset.StandardCharsets;
+import java.util.List;
 
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
- * Ce service ne gère aucune authentification : il valide seulement les JWT émis par Identity (M1).
+ * Valide les JWT émis par Keycloak.
  */
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                            JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
@@ -40,27 +34,23 @@ public class SecurityConfig {
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/doctors/**").hasRole("DOCTOR")
                 .anyRequest().authenticated())
-                        .oauth2ResourceServer(oauth -> oauth
-                        .authenticationEntryPoint(new ApiAuthenticationEntryPoint())
-                        .accessDeniedHandler(new ApiAccessDeniedHandler())
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)));
+            .oauth2ResourceServer(oauth -> oauth
+                .authenticationEntryPoint(new ApiAuthenticationEntryPoint())
+                .accessDeniedHandler(new ApiAccessDeniedHandler())
+                .jwt(jwt -> jwt.jwtAuthenticationConverter(new KeycloakRoleConverter())));
         return http.build();
     }
 
     @Bean
-    JwtAuthenticationConverter jwtAuthenticationConverter(
-            @Value("${app.security.jwt.roles-claim}") String rolesClaim) {
-        JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
-        authorities.setAuthoritiesClaimName(rolesClaim);
-        authorities.setAuthorityPrefix("ROLE_");
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(authorities);
-        return converter;
-    }
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
 
-    @Bean
-    JwtDecoder jwtDecoder(@Value("${app.security.jwt.secret}") String secret) {
-        SecretKey key = new SecretKeySpec(java.util.Base64.getDecoder().decode(secret), "HmacSHA256");
-        return NimbusJwtDecoder.withSecretKey(key).macAlgorithm(MacAlgorithm.HS256).build();
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 }

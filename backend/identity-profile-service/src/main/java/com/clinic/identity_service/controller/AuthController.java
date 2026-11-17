@@ -1,42 +1,55 @@
 package com.clinic.identity_service.controller;
 
-import com.clinic.identity_service.dto.RegisterRequest;
-import com.clinic.identity_service.dto.UserResponse;
-import com.clinic.identity_service.entity.User;
+import java.util.Map;
+import java.util.UUID;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.clinic.identity_service.dto.AdminRegisterRequest;
+import com.clinic.identity_service.dto.DoctorRegisterRequest;
+import com.clinic.identity_service.dto.PatientRegisterRequest;
 import com.clinic.identity_service.service.AuthService;
 
 import jakarta.validation.Valid;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-
+    
     private final AuthService authService;
 
     public AuthController(AuthService authService) {
         this.authService = authService;
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
-
-        User user = authService.registerUser(request);
-
-        UserResponse response = new UserResponse(
-            user.getUserId(),
-            user.getFirstName(),
-            user.getLastName(),
-            user.getEmail(),
-            user.getDateOfBirth(),
-            user.getCreatedAt(),
-            user.getRole(),
-            user.getIsActive()
-        );
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    @PostMapping("register-as-a-patient")
+    public ResponseEntity<Map<String, UUID>> registerPatient(
+        @Valid @RequestBody PatientRegisterRequest request
+    ) {
+        UUID id = authService.registerPatient(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", id));
     }
+
+    @PostMapping("resgister-as-a-doctor")
+    public ResponseEntity<Map<String, UUID>> registerDoctor(
+        @Valid @RequestBody DoctorRegisterRequest request
+    ) {
+        UUID id = authService.createDoctor(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", id));
+    }
+
+    @PostMapping("create-admin")
+    public ResponseEntity<Map<String, UUID>> createAdmin(
+        @Valid @RequestBody AdminRegisterRequest request
+    ) {
+        UUID id = authService.createAdmin(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", id));
+    }
+
+    
 }

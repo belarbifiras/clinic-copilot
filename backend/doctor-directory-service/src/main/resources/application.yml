@@ -18,6 +18,12 @@ spring:
     multipart:
       max-file-size: 5MB
       max-request-size: 6MB
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/clinic}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/clinic/protocol/openid-connect/certs}
 
 management:
   endpoints:
@@ -29,9 +35,5 @@ management:
       show-details: never
 
 app:
-  security:
-    jwt:
-      secret: ${JWT_SECRET}
-      roles-claim: ${JWT_ROLES_CLAIM:role}
   storage:
     diplomas-dir: ${DIPLOMAS_DIR:./data/diplomas}

@@ -15,7 +15,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "users")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class User {
 
     // Same id as the Keycloak user (the "sub" claim in the token)
