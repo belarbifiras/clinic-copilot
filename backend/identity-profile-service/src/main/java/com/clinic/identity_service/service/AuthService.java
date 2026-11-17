@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.core.Response;
 
@@ -133,36 +134,36 @@ public class AuthService {
         });
     }
 
-        public LoginResponse login(LoginRequest req) {
+    public LoginResponse login(LoginRequest req) {
 
-        try (Keycloak userKeycloak = KeycloakBuilder.builder()
-                .serverUrl(keycloakServerUrl)
-                .realm(realm)
-                .clientId(authClientId)
-                .clientSecret(authClientSecret)
-                .username(req.email())
-                .password(req.password())
-                .grantType(OAuth2Constants.PASSWORD)
-                .build()) {
+    try (Keycloak userKeycloak = KeycloakBuilder.builder()
+            .serverUrl(keycloakServerUrl)
+            .realm(realm)
+            .clientId(authClientId)
+            .clientSecret(authClientSecret)
+            .username(req.email())
+            .password(req.password())
+            .grantType(OAuth2Constants.PASSWORD)
+            .build()) {
 
-            AccessTokenResponse token =
-                    userKeycloak.tokenManager().getAccessToken();
+        AccessTokenResponse token =
+                userKeycloak.tokenManager().getAccessToken();
 
-            return new LoginResponse(
-                    token.getToken(),
-                    token.getRefreshToken(),
-                    (long) token.getExpiresIn(),
-                    (long) token.getRefreshExpiresIn(),
-                    token.getTokenType()
-            );
+        return new LoginResponse(
+                token.getToken(),
+                token.getRefreshToken(),
+                (long) token.getExpiresIn(),
+                (long) token.getRefreshExpiresIn(),
+                token.getTokenType()
+        );
 
-        } catch (NotAuthorizedException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Invalid email or password"
-            );
-        }
+    } catch (NotAuthorizedException | BadRequestException e) {
+        throw new ResponseStatusException(
+                HttpStatus.UNAUTHORIZED,
+                "Invalid email or password"
+        );
     }
+}
 
     /**
      * Creates the Keycloak user, then runs the local persistence step.

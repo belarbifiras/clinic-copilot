@@ -24,8 +24,7 @@ public class SecurityConfiguration {
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/register", "/api/auth/login", "/error", "/actuator/**").permitAll()
-                .requestMatchers("/api/users/**").hasRole("ADMIN")
-                .anyRequest().authenticated())
+                .anyRequest())
             .oauth2ResourceServer(oauth -> oauth
                 .jwt(jwt -> jwt.jwtAuthenticationConverter(new KeycloakRoleConverter())));
 
