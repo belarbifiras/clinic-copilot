@@ -224,6 +224,8 @@ services:
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_URL: jdbc:postgresql://postgres:5432/clinic_notifications
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
       JAVA_TOOL_OPTIONS: -Xmx256m
 
   reviews-feedback-service:

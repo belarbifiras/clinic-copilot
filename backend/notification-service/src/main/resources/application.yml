@@ -29,9 +29,10 @@ spring:
 
 # --- RabbitMQ (nafs exchange mta3 appointment-service) ---
 app:
-  jwt:
-    secret: ${JWT_SECRET}
-    secret-base64: ${JWT_SECRET_BASE64:false}
+  security:
+    keycloak:
+      issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/clinic}
+      jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/clinic/protocol/openid-connect/certs}
   rabbit:
     exchange: ${RABBIT_EXCHANGE:appointment.exchange}
     queue: ${RABBIT_QUEUE:notification.appointments}
@@ -42,10 +43,8 @@ management:
     web:
       exposure:
         include: health
-security:
-  jwt:
-    secret: ${JWT_SECRET}
 
 logging:
   level:
     com.clinic.notification_service: INFO
+
