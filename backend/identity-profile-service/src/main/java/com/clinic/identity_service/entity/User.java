@@ -14,8 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-@Entity
-@Inheritance(strategy = InheritanceType.JOINED)
+@MappedSuperclass
 public class User {
 
     // Same id as the Keycloak user (the "sub" claim in the token)

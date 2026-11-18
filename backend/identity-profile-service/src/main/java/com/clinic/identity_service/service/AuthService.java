@@ -34,6 +34,7 @@ import com.clinic.identity_service.entity.Doctor;
 import com.clinic.identity_service.entity.Patient;
 import com.clinic.identity_service.entity.Role;
 import com.clinic.identity_service.entity.Specialty;
+import com.clinic.identity_service.exception.ExistedByMailException;
 import com.clinic.identity_service.model.AppRole;
 import com.clinic.identity_service.repository.AdminRepository;
 import com.clinic.identity_service.repository.DoctorRepository;
@@ -203,7 +204,7 @@ public class AuthService {
         String userId;
         try (Response response = keycloak.realm(realm).users().create(user)) {
             if (response.getStatus() == 409) {
-                throw new IllegalArgumentException("Email already in use");
+                throw new ExistedByMailException("User with this email already exists.");
             }
             if (response.getStatus() != 201) {
                 throw new IllegalStateException(

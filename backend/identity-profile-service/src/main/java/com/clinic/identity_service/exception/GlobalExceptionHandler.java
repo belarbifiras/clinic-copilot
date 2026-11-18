@@ -19,7 +19,10 @@ import jakarta.servlet.http.HttpServletRequest;
 public class GlobalExceptionHandler {
 
     // 400 - a required field is missing
-    @ExceptionHandler(MissingFieldException.class)
+    @ExceptionHandler({
+        UserNotFoundException.class,
+        jakarta.persistence.EntityNotFoundException.class
+    })
     public ResponseEntity<ErrorResponse> handleBadRequest(
             MissingFieldException ex, HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request, Map.of());
@@ -46,9 +49,8 @@ public class GlobalExceptionHandler {
     }
 
     // 404 - unknown user id
-    @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(
-            UserNotFoundException ex, HttpServletRequest request) {
+            RuntimeException ex, HttpServletRequest request) {
         return build(HttpStatus.NOT_FOUND, ex.getMessage(), request, Map.of());
     }
 

@@ -12,6 +12,5 @@ import lombok.Setter;
 @Getter
 @Entity
 @Table(name = "admins")
-@PrimaryKeyJoinColumn(name = "user_id")
 public class Admin extends User {
 }
