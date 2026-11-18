@@ -100,10 +100,16 @@ export class LoginPage {
     this.error.set(null);
     const { email, password } = this.form.getRawValue();
     this.auth.login({ email: email.trim(), password }).subscribe({
-        next: (res) => {
+              next: (res) => {
         this.busy.set(false);
         this.router.navigateByUrl(
-          hasRole(res, 'ADMIN') ? '/admin' : hasRole(res, 'DOCTOR') ? '/espace-medecin' : '/medecins',
+          hasRole(res, 'ADMIN')
+            ? '/admin'
+            : hasRole(res, 'DOCTOR')
+              ? '/espace-medecin'
+              : hasRole(res, 'PATIENT')
+                ? '/espace-patient'
+                : '/',
         );
       },
       error: (e: unknown) => {
