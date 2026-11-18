@@ -50,10 +50,12 @@ app:
       completed: appointment.completed.queue
     doctor-validated-queue: doctor.validated.queue
 
-# --- JWT ---
-security:
-  jwt:
-    secret: ${JWT_SECRET}
+
+# --- Keycloak (validation des tokens) ---
+  security:
+    keycloak:
+      issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/clinic}
+      jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/clinic/protocol/openid-connect/certs}
 
 # --- OpenAPI ---
 springdoc:

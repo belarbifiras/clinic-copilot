@@ -188,7 +188,8 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/clinic_appointments
       IDENTITY_PROFILE_URL: http://identity-profile-service:8081
       DOCTOR_DIRECTORY_URL: http://doctor-directory-service:8082
-      JWT_SECRET: ${JWT_SECRET}
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: ${RABBITMQ_DEFAULT_USER:-guest}
@@ -213,6 +214,8 @@ services:
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_URL: jdbc:postgresql://postgres:5432/clinic_records
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
       JAVA_TOOL_OPTIONS: -Xmx256m
 
   notification-service:
@@ -223,6 +226,8 @@ services:
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_URL: jdbc:postgresql://postgres:5432/clinic_notifications
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
       JAVA_TOOL_OPTIONS: -Xmx256m
 
   reviews-feedback-service:
@@ -233,6 +238,8 @@ services:
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_URL: jdbc:postgresql://postgres:5432/clinic_reviews
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
       JAVA_TOOL_OPTIONS: -Xmx256m
 
   admin-audit-service:
@@ -243,7 +250,8 @@ services:
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_URL: jdbc:postgresql://postgres:5432/clinic_admin
-      JWT_SECRET: ${JWT_SECRET}
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
       JAVA_TOOL_OPTIONS: -Xmx256m
     ports:
       - "8089:8089"
@@ -261,7 +269,8 @@ services:
       NODE_ENV: production
       PORT: 3000
       MONGODB_URI: mongodb://chat-mongodb:27017/clinic_chat
-      JWT_SECRET: ${JWT_SECRET}
+      KEYCLOAK_JWKS_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
 
     depends_on:
       chat-mongodb:

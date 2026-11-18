@@ -15,10 +15,9 @@ spring:
 
 app:
   security:
-    jwt:
-      secret: ${JWT_SECRET}
-      roles-claim: ${JWT_ROLES_CLAIM:role}
-
+    keycloak:
+      issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/clinic}
+      jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/clinic/protocol/openid-connect/certs}
 management:
   endpoints:
     web:
