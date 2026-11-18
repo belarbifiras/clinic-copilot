@@ -269,7 +269,8 @@ services:
       NODE_ENV: production
       PORT: 3000
       MONGODB_URI: mongodb://chat-mongodb:27017/clinic_chat
-      JWT_SECRET: ${JWT_SECRET}
+      KEYCLOAK_JWKS_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
 
     depends_on:
       chat-mongodb:

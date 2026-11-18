@@ -5,12 +5,12 @@ const { findConversationFor, saveMessage } = require('./services/chat.service');
 function initSocket(httpServer) {
     const io = new Server(httpServer, { cors: { origin: '*' } });
 
-    // Authentification : refuse la connexion si le token est absent ou faux
-    io.use((socket, next) => {
+        // Authentification : refuse la connexion si le token est absent ou faux
+    io.use(async (socket, next) => {
         try {
             const token = socket.handshake.auth?.token
                 || (socket.handshake.headers.authorization || '').replace('Bearer ', '');
-            socket.user = verifyToken(token);
+            socket.user = await verifyToken(token);
             next();
         } catch (err) {
             next(new Error('Unauthorized'));
