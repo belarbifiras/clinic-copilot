@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, catchError, of } from 'rxjs';
 import { API_BASE_URL } from '../../core/api.config';
 
 export type Verification = 'PENDING' | 'VERIFIED' | 'REJECTED';
@@ -107,7 +107,7 @@ export class AdminService {
   }
 
   audit(): Observable<AuditEntry[]> {
-    return this.http.get<AuditEntry[]>(`${this.base}/audit`);
+    return this.http.get<AuditEntry[]>(`${this.base}/audit`).pipe(catchError(() => of([])));
   }
 
   // --- Gestion des utilisateurs (identity-profile-service) ---
@@ -133,7 +133,9 @@ export class AdminService {
     if (status) {
       params = params.set('status', status);
     }
-    return this.http.get<Page<AdminReview>>(`${this.base}/reviews`, { params });
+    return this.http.get<Page<AdminReview>>(`${this.base}/reviews`, { params }).pipe(
+      catchError(() => of({ content: [], page: 0, size: 0, totalElements: 0, totalPages: 0 }))
+    );
   }
 
   hideReview(reviewId: string, reason: string): Observable<AdminReview> {
