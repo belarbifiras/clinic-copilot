@@ -8,9 +8,12 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.clinic.doctor_directory_service.common.client.IdentityServiceClient;
 import com.clinic.doctor_directory_service.common.exception.BusinessRuleException;
 import com.clinic.doctor_directory_service.common.exception.ConflictException;
 import com.clinic.doctor_directory_service.common.exception.ResourceNotFoundException;
@@ -36,19 +39,24 @@ import com.clinic.doctor_directory_service.doctor.repository.SpecialtyRepository
 @Service
 public class DoctorService {
 
+    private static final Logger log = LoggerFactory.getLogger(DoctorService.class);
+
     private final DoctorRepository doctorRepository;
     private final SpecialtyRepository specialtyRepository;
     private final LanguageRepository languageRepository;
     private final DoctorStatusHistoryRepository historyRepository;
+    private final IdentityServiceClient identityServiceClient;
 
     public DoctorService(DoctorRepository doctorRepository,
                          SpecialtyRepository specialtyRepository,
                          LanguageRepository languageRepository,
-                         DoctorStatusHistoryRepository historyRepository) {
+                         DoctorStatusHistoryRepository historyRepository,
+                         IdentityServiceClient identityServiceClient) {
         this.doctorRepository = doctorRepository;
         this.specialtyRepository = specialtyRepository;
         this.languageRepository = languageRepository;
         this.historyRepository = historyRepository;
+        this.identityServiceClient = identityServiceClient;
     }
 
     // ---------- Profil ----------
@@ -68,7 +76,20 @@ public class DoctorService {
         Doctor doctor = new Doctor();
         doctor.setUserId(userId);
         apply(doctor, request);
-        return DoctorMapper.toResponse(doctorRepository.save(doctor));
+        DoctorProfileResponse response = DoctorMapper.toResponse(doctorRepository.save(doctor));
+
+        // Le compte Keycloak a été créé avec enabled=true pour permettre l'obtention du JWT
+        // pendant l'inscription. On le désactive immédiatement après la création du profil :
+        // le médecin ne pourra se reconnecter qu'une fois son diplôme validé par un admin.
+        try {
+            identityServiceClient.deactivateUser(userId);
+        } catch (Exception e) {
+            // On ne bloque pas la création du profil si l'appel interne échoue.
+            // L'admin peut réactiver manuellement depuis la page utilisateurs.
+            log.error("Impossible de désactiver le compte Keycloak pour userId={} : {}", userId, e.getMessage());
+        }
+
+        return response;
     }
 
     @Transactional(readOnly = true)

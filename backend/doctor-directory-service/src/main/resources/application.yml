@@ -35,3 +35,7 @@ app:
       jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/clinic/protocol/openid-connect/certs}
   storage:
     diplomas-dir: ${DIPLOMAS_DIR:./data/diplomas}
+  clients:
+    identity-service:
+      base-url: ${IDENTITY_SERVICE_URL:http://localhost:8081}
+      internal-api-key: ${APP_INTERNAL_API_KEY:changeme-internal-key}

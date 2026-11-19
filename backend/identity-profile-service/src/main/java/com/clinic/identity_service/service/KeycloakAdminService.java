@@ -24,7 +24,13 @@ public class KeycloakAdminService {
         this.realm = realm;
     }
 
-    /** Creates the user in Keycloak and returns its id (the future "sub" in the token). */
+    /**
+     * Creates the user in Keycloak and returns its id (the future "sub" in the token).
+     * All accounts are enabled=true at creation so the registration flow can obtain
+     * a JWT to call createMyProfile(). For DOCTORS, DoctorService.createMyProfile()
+     * immediately calls identityServiceClient.deactivateUser() after saving the profile,
+     * so the doctor cannot log in again until an admin validates their diploma.
+     */
     public UUID createUser(String firstName, String lastName, String email,
                            String password, Role role) {
 
@@ -33,6 +39,8 @@ public class KeycloakAdminService {
         user.setEmail(email);
         user.setFirstName(firstName);
         user.setLastName(lastName);
+        // All accounts start enabled so the registration flow can get a JWT.
+        // Doctors are deactivated by DoctorService after profile + diploma creation.
         user.setEnabled(true);
         user.setEmailVerified(true);
 

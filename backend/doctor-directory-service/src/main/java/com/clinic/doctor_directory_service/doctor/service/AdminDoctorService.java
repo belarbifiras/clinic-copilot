@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.clinic.doctor_directory_service.common.api.PageResponse;
+import com.clinic.doctor_directory_service.common.client.IdentityServiceClient;
 import com.clinic.doctor_directory_service.common.exception.BusinessRuleException;
 import com.clinic.doctor_directory_service.common.exception.ResourceNotFoundException;
 import com.clinic.doctor_directory_service.common.security.CurrentUser;
@@ -45,15 +46,18 @@ public class AdminDoctorService {
     private final DiplomaRepository diplomaRepository;
     private final DoctorStatusHistoryRepository historyRepository;
     private final DiplomaStorage storage;
+    private final IdentityServiceClient identityServiceClient;
 
     public AdminDoctorService(DoctorRepository doctorRepository,
                               DiplomaRepository diplomaRepository,
                               DoctorStatusHistoryRepository historyRepository,
-                              DiplomaStorage storage) {
+                              DiplomaStorage storage,
+                              IdentityServiceClient identityServiceClient) {
         this.doctorRepository = doctorRepository;
         this.diplomaRepository = diplomaRepository;
         this.historyRepository = historyRepository;
         this.storage = storage;
+        this.identityServiceClient = identityServiceClient;
     }
 
     @Transactional(readOnly = true)
@@ -146,6 +150,16 @@ public class AdminDoctorService {
             doctor.setVerificationStatus(target);
             historyRepository.save(new DoctorStatusHistory(doctor.getId(), StatusType.VERIFICATION,
                     current.name(), target.name(), adminId, reason));
+        }
+
+        // Synchronise l'état du compte Keycloak avec le statut de vérification.
+        // - VERIFIED  → le médecin peut maintenant se connecter (enabled=true)
+        // - PENDING   → aucun changement (le compte reste désactivé jusqu'à une décision définitive)
+        // - REJECTED  → tous les justificatifs ont été rejetés, on bloque la connexion (enabled=false)
+        if (target == VerificationStatus.VERIFIED && current != VerificationStatus.VERIFIED) {
+            identityServiceClient.activateUser(doctor.getUserId());
+        } else if (target == VerificationStatus.REJECTED && current != VerificationStatus.REJECTED) {
+            identityServiceClient.deactivateUser(doctor.getUserId());
         }
     }
 

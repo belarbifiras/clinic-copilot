@@ -37,3 +37,7 @@ management:
     web:
       exposure:
         include: health
+
+app:
+  internal:
+    api-key: ${APP_INTERNAL_API_KEY:changeme-internal-key}
