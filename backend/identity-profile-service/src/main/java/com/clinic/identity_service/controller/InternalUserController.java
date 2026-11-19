@@ -51,4 +51,21 @@ public class InternalUserController {
         userService.deactivateUser(userId);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{userId}/status")
+    public ResponseEntity<Void> updateStatus(
+            @PathVariable UUID userId,
+            @RequestHeader("X-Internal-Api-Key") String key,
+            @org.springframework.web.bind.annotation.RequestBody java.util.Map<String, String> body) {
+        if (!internalApiKey.equals(key)) {
+            return ResponseEntity.status(403).build();
+        }
+        String status = body != null ? body.get("status") : null;
+        if ("ACTIVE".equalsIgnoreCase(status)) {
+            userService.activateUser(userId);
+        } else if ("DISABLED".equalsIgnoreCase(status) || "DEACTIVATED".equalsIgnoreCase(status)) {
+            userService.deactivateUser(userId);
+        }
+        return ResponseEntity.noContent().build();
+    }
 }

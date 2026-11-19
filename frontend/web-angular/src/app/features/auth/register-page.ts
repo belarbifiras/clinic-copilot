@@ -349,12 +349,13 @@ export class RegisterPage {
           this.finish();
         },
         error: (e: any) => {
+          this.auth.logout(false);
           const step = e?.url?.includes('/api/doctors/') ? 'doctor' : 'auth';
           this.fail(
             step === 'doctor'
               ? e?.status === 403
                 ? "Compte créé, mais il n'a pas le rôle médecin (à corriger côté Identity)."
-                : "Compte créé, mais l'envoi du profil ou du diplôme a échoué. Connectez-vous pour réessayer."
+                : "Compte créé, mais l'envoi du profil ou du diplôme a échoué. Veuillez vous reconnecter ou contacter un administrateur."
               : authErrorMessage(e, 'register'),
           );
         },

@@ -1,5 +1,5 @@
 ﻿import { DecimalPipe } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideCornerDownRight, LucideQuote, LucideSearch } from '@lucide/angular';
 import { initials, shortDate } from '../../core/mock/format';
@@ -9,6 +9,8 @@ import { avatarGradient } from '../../core/mock/palette';
 import { Icon } from '../../shared/ui/icon';
 import { PageHeader } from '../../shared/ui/page-header';
 import { StarRating } from '../reviews/star-rating';
+import { ReviewsService } from '../reviews/reviews.service';
+import { DoctorSpaceService } from './doctor-space.service';
 
 type Sort = 'recent' | 'best' | 'worst';
 
@@ -140,8 +142,10 @@ type Sort = 'recent' | 'best' | 'worst';
     </div>
   `,
 })
-export class DoctorReviewsPage {
+export class DoctorReviewsPage implements OnInit {
   private readonly store = inject(MockStore);
+  private readonly doctorSpace = inject(DoctorSpaceService);
+  private readonly reviewsService = inject(ReviewsService);
 
   protected readonly Search = LucideSearch;
   protected readonly Quote = LucideQuote;
@@ -159,7 +163,36 @@ export class DoctorReviewsPage {
   protected readonly replyOpen = signal<string | null>(null);
   protected readonly replyDraft = signal('');
 
-  private readonly reviews = this.store.doctorReviews;
+  private readonly liveReviews = signal<MockReview[] | null>(null);
+
+  ngOnInit() {
+    this.doctorSpace.me().subscribe({
+      next: (profile) => {
+        if (!profile?.id) return;
+        this.reviewsService.list(profile.id, 0, 50).subscribe({
+          next: (res) => {
+            if (res?.content && res.content.length > 0) {
+              const doctorFullName = `${profile.firstName} ${profile.lastName}`.trim();
+              const mapped: MockReview[] = res.content.map((r) => ({
+                id: r.id,
+                doctorName: doctorFullName,
+                rating: r.rating,
+                comment: r.comment ?? '',
+                authorName: r.authorName,
+                at: r.createdAt,
+                status: 'PUBLISHED' as const,
+              }));
+              this.liveReviews.set(mapped);
+            }
+          },
+          error: () => { /* fallback to mock */ }
+        });
+      },
+      error: () => { /* fallback to mock */ }
+    });
+  }
+
+  private readonly reviews = computed(() => this.liveReviews() ?? this.store.doctorReviews());
   protected readonly total = computed(() => this.reviews().length);
   protected readonly average = computed(() => {
     const l = this.reviews();

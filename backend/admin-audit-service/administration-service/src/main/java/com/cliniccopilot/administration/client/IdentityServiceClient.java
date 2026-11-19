@@ -27,16 +27,19 @@ public class IdentityServiceClient {
 
     private static final String SERVICE = "identity-service";
     private final RestClient client;
+    private final AppProperties props;
 
     public IdentityServiceClient(RestClientFactory factory, AppProperties props) {
         this.client = factory.create(props.clients().identity().baseUrl());
+        this.props = props;
     }
 
     public void updateUserStatus(UUID userId, AccountStatus status) {
         try {
             client.patch()
-                    .uri("/api/v1/users/{id}/status", userId) // TODO: confirmer le chemin avec M1
-                    .body(Map.of("status", status.name()))     // TODO: confirmer le corps avec M1
+                    .uri("/internal/users/{id}/status", userId)
+                    .header("X-Internal-Api-Key", props.security().internalApiKey())
+                    .body(Map.of("status", status.name()))
                     .retrieve()
                     .toBodilessEntity();
         } catch (RestClientResponseException e) {

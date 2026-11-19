@@ -131,6 +131,13 @@ public class AdminDoctorService {
             doctor.setProfessionalStatus(target);
             historyRepository.save(new DoctorStatusHistory(doctor.getId(), StatusType.PROFESSIONAL,
                     current.name(), target.name(), CurrentUser.id(), reason));
+
+            // Synchronisation de l'accès Keycloak selon le statut professionnel
+            if (target == ProfessionalStatus.SUSPENDED) {
+                identityServiceClient.deactivateUser(doctor.getUserId());
+            } else if (target == ProfessionalStatus.ACTIVE && doctor.getVerificationStatus() == VerificationStatus.VERIFIED) {
+                identityServiceClient.activateUser(doctor.getUserId());
+            }
         }
         doctorRepository.flush();
         return toDetail(doctor);
