@@ -106,6 +106,7 @@ services:
       CHAT_URL: http://chat-service:3000
       NOTIFICATION_SERVICE_URL: http://notification-service:8087
       NOTIFICATION_URL: http://notification-service:8087
+      AI_ASSESSMENT_URL: http://ai-assessment-service:8080
     ports:
       - "8080:8080"
 
@@ -205,6 +206,12 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_URL: jdbc:postgresql://postgres:5432/clinic_ai
       JAVA_TOOL_OPTIONS: -Xmx256m
+      DOCTOR_DIRECTORY_URL: http://doctor-directory-service:8082
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
+      LLM_BASE_URL: ${LLM_BASE_URL}
+      LLM_API_KEY: ${LLM_API_KEY}
+      AI_MODEL: ${AI_MODEL:-Qwen/Qwen3-8B}
 
   medical-records-service:
     <<: *spring-common
