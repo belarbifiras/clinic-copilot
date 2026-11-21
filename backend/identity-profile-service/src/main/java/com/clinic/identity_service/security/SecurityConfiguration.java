@@ -18,6 +18,8 @@ public class SecurityConfiguration {
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/register", "/error", "/actuator/**").permitAll()
+                // Endpoints internes appelés par les microservices (clé API vérifiée dans le contrôleur).
+                .requestMatchers("/internal/**").permitAll()
                 .requestMatchers("/api/users/**").hasRole("ADMIN")
                 .anyRequest().authenticated())
             .oauth2ResourceServer(oauth -> oauth

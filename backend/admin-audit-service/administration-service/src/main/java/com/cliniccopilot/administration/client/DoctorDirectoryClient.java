@@ -40,8 +40,8 @@ public class DoctorDirectoryClient {
         if (reason != null && !reason.isBlank()) body.put("reason", reason);
         try {
             client.patch()
-                    .uri("/api/v1/doctors/{id}/verification", doctorId) // TODO: confirmer le chemin avec M2
-                    .body(body)                                          // TODO: confirmer le corps avec M2
+                    .uri("/api/admin/doctors/{id}/status", doctorId)
+                    .body(body)
                     .retrieve()
                     .toBodilessEntity();
         } catch (RestClientResponseException e) {

@@ -141,6 +141,7 @@ services:
       KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
       KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET}
+      APP_INTERNAL_API_KEY: ${INTERNAL_API_KEY:-changeme-internal-key}
       JAVA_TOOL_OPTIONS: -Xmx256m
     depends_on:
       postgres:
@@ -174,6 +175,8 @@ services:
       KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
       DIPLOMAS_DIR: /app/data/diplomas
+      IDENTITY_SERVICE_URL: http://identity-profile-service:8081
+      APP_INTERNAL_API_KEY: ${INTERNAL_API_KEY:-changeme-internal-key}
       JAVA_TOOL_OPTIONS: -Xmx256m
     volumes:
       - diplomas_data:/app/data/diplomas
