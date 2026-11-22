@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Layout classique (ViewBinding) de la fiche contact, volontairement hors Compose. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/color_medical_background"
+    android:orientation="vertical">
+
+    <Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?android:attr/actionBarSize"
+        android:background="@color/color_card_surface"
+        android:navigationIcon="@drawable/ic_arrow_back"
+        android:title="Fiche contact"
+        android:titleTextColor="@color/color_text_main" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:padding="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <!-- Carte Level 1 : surface blanche, coins 16dp et ombre douce. -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card_contact"
+                android:elevation="4dp"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:outlineProvider="background"
+                android:padding="24dp">
+
+                <TextView
+                    android:id="@+id/tvAvatarInitiale"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:background="@drawable/bg_avatar_circle"
+                    android:gravity="center"
+                    android:textColor="@color/color_card_surface"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    tools:text="LM" />
+
+                <TextView
+                    android:id="@+id/tvNomContact"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:gravity="center"
+                    android:textColor="@color/color_text_main"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    tools:text="Dr. Léa Martin" />
+
+                <TextView
+                    android:id="@+id/tvSpecialiteContact"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:textColor="@color/color_text_secondary"
+                    android:textSize="14sp"
+                    tools:text="Médecin généraliste" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginBottom="16dp"
+                    android:background="@color/color_divider" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.04"
+                    android:text="TÉLÉPHONE"
+                    android:textAllCaps="true"
+                    android:textColor="@color/color_text_secondary"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvTelephoneContact"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center"
+                    android:textColor="@color/color_text_main"
+                    android:textSize="18sp"
+                    tools:text="01 42 10 20 30" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnAppeler"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/bg_button_primary_round"
+                android:drawablePadding="12dp"
+                android:drawableStart="@drawable/ic_phone"
+                android:drawableTint="@color/color_card_surface"
+                android:gravity="center"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:text="Appeler"
+                android:textAllCaps="false"
+                android:textColor="@color/color_card_surface"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnPartager"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_button_secondary_round"
+                android:drawablePadding="12dp"
+                android:drawableStart="@drawable/ic_share"
+                android:drawableTint="@color/color_primary_blue"
+                android:gravity="center"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:text="Partager les coordonnées"
+                android:textAllCaps="false"
+                android:textColor="@color/color_primary_blue"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
