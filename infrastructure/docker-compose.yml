@@ -108,7 +108,7 @@ services:
       NOTIFICATION_URL: http://notification-service:8087
       AI_ASSESSMENT_URL: http://ai-assessment-service:8080
     ports:
-      - "8080:8080"
+      - "8082:8080"
 
   # -------------------------
   # ANGULAR FRONTEND
@@ -202,6 +202,7 @@ services:
     build: ../backend/ai-assessment-service
     image: ${DOCKERHUB_USER:-clinic}/clinic-ai-assessment-service:1.0
     environment:
+      DOCTOR_DIRECTORY_URL: http://doctor-directory-service:8082
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_URL: jdbc:postgresql://postgres:5432/clinic_ai
