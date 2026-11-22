@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Nécessaire aux appels Retrofit vers le chat-service. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Nécessaire à la recherche vocale depuis le champ de recherche des conversations. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
     <application
         android:name=".ClinicApp"
         android:allowBackup="true"
@@ -24,6 +30,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Fiche contact classique (XML + ViewBinding), ouverte par un Intent explicite depuis ChatScreen. -->
+        <activity
+            android:name=".ui.contact.DoctorContactActivity"
+            android:exported="false"
+            android:label="Fiche du contact" />
     </application>
 
 </manifest>
