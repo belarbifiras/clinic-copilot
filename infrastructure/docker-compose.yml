@@ -127,6 +127,8 @@ services:
       CHAT_URL: http://chat-service:3000
       NOTIFICATION_SERVICE_URL: http://notification-service:8087
       NOTIFICATION_URL: http://notification-service:8087
+      JAVA_TOOL_OPTIONS: -Xmx256m
+      EUREKA_URL: http://eureka-server:8761/eureka
     depends_on:
       eureka-server:
         condition: service_healthy
