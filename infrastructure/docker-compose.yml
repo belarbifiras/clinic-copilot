@@ -80,6 +80,26 @@ services:
     volumes:
       - keycloak_data:/opt/keycloak/data
       - ./keycloak:/opt/keycloak/data/import:ro
+
+
+  # -------------------------
+  # SERVICE REGISTRY (Eureka)
+  # -------------------------
+
+  eureka-server:
+    build: ../backend/eureka-server
+    image: ${DOCKERHUB_USER:-clinic}/clinic-eureka-server:1.0
+    restart: unless-stopped
+    environment:
+      JAVA_TOOL_OPTIONS: -Xmx256m
+      EUREKA_HOSTNAME: eureka-server
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8761 && echo -e \"GET /actuator/health HTTP/1.0\\r\\n\\r\\n\" >&3 && grep -q UP <&3'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
   
   # -------------------------
   # API GATEWAY
