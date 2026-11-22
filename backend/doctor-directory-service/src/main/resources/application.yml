@@ -28,6 +28,13 @@ management:
     health:
       show-details: never
 
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+  instance:
+    prefer-ip-address: true
+
 app:
   security:
     keycloak:

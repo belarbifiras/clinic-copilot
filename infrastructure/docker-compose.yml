@@ -110,6 +110,7 @@ services:
     image: ${DOCKERHUB_USER:-clinic}/clinic-api-gateway:1.0
     restart: unless-stopped
     environment:
+      EUREKA_URL: http://eureka-server:8761/eureka
       IDENTITY_SERVICE_URL: http://identity-profile-service:8081
       DOCTOR_DIRECTORY_URL: http://doctor-directory-service:8082
       PATIENT_PROFILE_URL: http://patient-profile-service:8090
@@ -126,9 +127,11 @@ services:
       CHAT_URL: http://chat-service:3000
       NOTIFICATION_SERVICE_URL: http://notification-service:8087
       NOTIFICATION_URL: http://notification-service:8087
+    depends_on:
+      eureka-server:
+        condition: service_healthy
     ports:
       - "8080:8080"
-
   # -------------------------
   # ANGULAR FRONTEND
   # -------------------------
@@ -198,6 +201,11 @@ services:
       IDENTITY_SERVICE_URL: http://identity-profile-service:8081
       APP_INTERNAL_API_KEY: ${INTERNAL_API_KEY:-changeme-internal-key}
       JAVA_TOOL_OPTIONS: -Xmx256m
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
     volumes:
       - diplomas_data:/app/data/diplomas
 
