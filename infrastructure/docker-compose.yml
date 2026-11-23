@@ -129,6 +129,9 @@ services:
       NOTIFICATION_URL: http://notification-service:8087
     ports:
       - "8080:8080"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
 
   # -------------------------
   # ANGULAR FRONTEND
@@ -251,6 +254,12 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_URL: jdbc:postgresql://postgres:5432/clinic_ai
       JAVA_TOOL_OPTIONS: -Xmx256m
+      EUREKA_URL: http://eureka-server:8761/eureka
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
 
   medical-records-service:
     <<: *spring-common
