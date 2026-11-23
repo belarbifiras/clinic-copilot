@@ -255,6 +255,8 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/clinic_ai
       JAVA_TOOL_OPTIONS: -Xmx256m
       EUREKA_URL: http://eureka-server:8761/eureka
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
     depends_on:
       postgres:
         condition: service_healthy
