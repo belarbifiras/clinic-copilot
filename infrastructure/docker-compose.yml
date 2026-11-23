@@ -80,6 +80,26 @@ services:
     volumes:
       - keycloak_data:/opt/keycloak/data
       - ./keycloak:/opt/keycloak/data/import:ro
+
+
+  # -------------------------
+  # SERVICE REGISTRY (Eureka)
+  # -------------------------
+
+  eureka-server:
+    build: ../backend/eureka-server
+    image: ${DOCKERHUB_USER:-clinic}/clinic-eureka-server:1.0
+    restart: unless-stopped
+    environment:
+      JAVA_TOOL_OPTIONS: -Xmx256m
+      EUREKA_HOSTNAME: eureka-server
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8761 && echo -e \"GET /actuator/health HTTP/1.0\\r\\n\\r\\n\" >&3 && grep -q UP <&3'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
   
   # -------------------------
   # API GATEWAY
@@ -90,6 +110,7 @@ services:
     image: ${DOCKERHUB_USER:-clinic}/clinic-api-gateway:1.0
     restart: unless-stopped
     environment:
+      EUREKA_URL: http://eureka-server:8761/eureka
       IDENTITY_SERVICE_URL: http://identity-profile-service:8081
       DOCTOR_DIRECTORY_URL: http://doctor-directory-service:8082
       PATIENT_PROFILE_URL: http://patient-profile-service:8090
@@ -106,9 +127,8 @@ services:
       CHAT_URL: http://chat-service:3000
       NOTIFICATION_SERVICE_URL: http://notification-service:8087
       NOTIFICATION_URL: http://notification-service:8087
-      AI_ASSESSMENT_URL: http://ai-assessment-service:8080
     ports:
-      - "8082:8080"
+      - "8080:8080"
 
   # -------------------------
   # ANGULAR FRONTEND
@@ -143,8 +163,11 @@ services:
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
       KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET}
       APP_INTERNAL_API_KEY: ${INTERNAL_API_KEY:-changeme-internal-key}
+      EUREKA_URL: http://eureka-server:8761/eureka
       JAVA_TOOL_OPTIONS: -Xmx256m
     depends_on:
+      eureka-server:
+        condition: service_healthy
       postgres:
         condition: service_healthy
       keycloak:
@@ -163,7 +186,13 @@ services:
       SERVER_PORT: 8090
       KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
+      EUREKA_URL: http://eureka-server:8761/eureka
       JAVA_TOOL_OPTIONS: -Xmx256m
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
 
   doctor-directory-service:
     <<: *spring-common
@@ -179,6 +208,12 @@ services:
       IDENTITY_SERVICE_URL: http://identity-profile-service:8081
       APP_INTERNAL_API_KEY: ${INTERNAL_API_KEY:-changeme-internal-key}
       JAVA_TOOL_OPTIONS: -Xmx256m
+      EUREKA_URL: http://eureka-server:8761/eureka
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
     volumes:
       - diplomas_data:/app/data/diplomas
 
@@ -199,6 +234,12 @@ services:
       RABBITMQ_USER: ${RABBITMQ_DEFAULT_USER:-guest}
       RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-guest}
       JAVA_TOOL_OPTIONS: -Xmx256m
+      EUREKA_URL: http://eureka-server:8761/eureka
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
 
   ai-assessment-service:
     <<: *spring-common
@@ -210,12 +251,6 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_URL: jdbc:postgresql://postgres:5432/clinic_ai
       JAVA_TOOL_OPTIONS: -Xmx256m
-      DOCTOR_DIRECTORY_URL: http://doctor-directory-service:8082
-      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
-      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
-      LLM_BASE_URL: ${LLM_BASE_URL}
-      LLM_API_KEY: ${LLM_API_KEY}
-      AI_MODEL: ${AI_MODEL:-Qwen/Qwen3-8B}
 
   medical-records-service:
     <<: *spring-common
@@ -228,6 +263,12 @@ services:
       KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
       JAVA_TOOL_OPTIONS: -Xmx256m
+      EUREKA_URL: http://eureka-server:8761/eureka
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
 
   notification-service:
     <<: *spring-common
@@ -240,6 +281,12 @@ services:
       KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
       JAVA_TOOL_OPTIONS: -Xmx256m
+      EUREKA_URL: http://eureka-server:8761/eureka
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
 
   reviews-feedback-service:
     <<: *spring-common
@@ -252,6 +299,12 @@ services:
       KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
       JAVA_TOOL_OPTIONS: -Xmx256m
+      EUREKA_URL: http://eureka-server:8761/eureka
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
 
   admin-audit-service:
     <<: *spring-common
@@ -264,6 +317,12 @@ services:
       KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
       JAVA_TOOL_OPTIONS: -Xmx256m
+      EUREKA_URL: http://eureka-server:8761/eureka
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
     ports:
       - "8089:8089"
 

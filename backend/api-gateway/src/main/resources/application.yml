@@ -98,7 +98,7 @@ spring:
 
             # Annuaire des médecins
             - id: doctor-directory-public
-              uri: ${DOCTOR_DIRECTORY_URL:${DOCTOR_URL:http://localhost:8082}}
+              uri: lb://doctor-directory-service
               predicates:
                 - Path=/api/directory/**
 
@@ -129,3 +129,10 @@ management:
     web:
       exposure:
         include: health,gateway
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+  instance:
+    prefer-ip-address: true

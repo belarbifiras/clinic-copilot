@@ -25,6 +25,13 @@ keycloak:
   admin-client-id: identity-service
   admin-client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:change_me_client_secret_1234}
 
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+  instance:
+    prefer-ip-address: true
+
 patient:
   service:
     url: ${PATIENT_SERVICE_URL:http://localhost:8090}
