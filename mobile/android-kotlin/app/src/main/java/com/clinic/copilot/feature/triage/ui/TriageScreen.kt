@@ -1,0 +1,366 @@
+package com.clinic.copilot.feature.triage.ui
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.clinic.copilot.feature.triage.domain.NiveauSeverite
+import com.clinic.copilot.feature.triage.domain.TriageMessage
+import com.clinic.copilot.feature.triage.domain.TriageRole
+import com.clinic.copilot.ui.theme.ChatColors
+
+/**
+ * Écran de triage IA – Membre 2, écran 2/2.
+ *
+ * Maquette : avertissement vital, header mascotte certifié HDS,
+ * badge sévérité, bulles de chat patient + IA, suggestions rapides,
+ * saisie avec envoi, médecins disponibles en bas.
+ *
+ * @param onRetour Navigation retour vers l'accueil.
+ * @param viewModel ViewModel injecté par Hilt.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TriageScreen(
+    onRetour: () -> Unit,
+    viewModel: TriageViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val listState = rememberLazyListState()
+
+    // Auto-scroll vers le bas à chaque nouveau message
+    LaunchedEffect(uiState.messages.size, uiState.isTyping) {
+        val target = uiState.messages.size + (if (uiState.isTyping) 1 else 0)
+        if (target > 0) listState.animateScrollToItem(target - 1)
+    }
+
+    Scaffold(
+        containerColor = ChatColors.medicalBackground,
+        topBar = {
+            Column {
+                // ── Bandeau AVERTISSEMENT VITAL ───────────────────────────
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFFDE8E8))
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(ChatColors.urgenceCritique),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "AVERTISSEMENT VITAL · L'IA ne remplace pas un médecin. En cas...",
+                            fontSize = 11.sp,
+                            color = ChatColors.urgenceCritique,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Button(
+                            onClick = { /* tel:15 */ },
+                            colors = ButtonDefaults.buttonColors(containerColor = ChatColors.urgenceCritique),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                        ) {
+                            Text("15", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+                    }
+                }
+
+                // ── App Bar ───────────────────────────────────────────────
+                TopAppBar(
+                    navigationIcon = {
+                        IconButton(onClick = onRetour) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour", tint = ChatColors.primaryNavy)
+                        }
+                    },
+                    title = {
+                        Column {
+                            Text(
+                                "Triage la Copilot",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = ChatColors.primaryNavy,
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = ChatColors.cardSurface),
+                )
+
+                // ── Carte IA certifiée ─────────────────────────────────────
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(ChatColors.cardSurface)
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(ChatColors.turquoiseAccent),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text("CC", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
+                    Spacer(Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Clinic Copilot", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = ChatColors.primaryNavy)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Shield, contentDescription = null, tint = ChatColors.validationSucces, modifier = Modifier.size(12.dp))
+                            Spacer(Modifier.width(3.dp))
+                            Text("IA Certifiée Santé", fontSize = 11.sp, color = ChatColors.validationSucces)
+                            Text(" · ", color = ChatColors.textSecondary, fontSize = 11.sp)
+                            Text("Triage clinique guidé · Données HDS ch...", fontSize = 11.sp, color = ChatColors.textSecondary)
+                        }
+                    }
+                }
+
+                // ── Badge sévérité (si détecté) ───────────────────────────
+                val lastSeverite = uiState.messages.lastOrNull { it.severite != null }?.severite
+                if (lastSeverite != null) {
+                    SeveriteBadge(lastSeverite)
+                }
+            }
+        },
+        bottomBar = {
+            SaisieBar(
+                saisie = uiState.saisie,
+                isTyping = uiState.isTyping,
+                medecinsDisponibles = uiState.medecinsDisponibles,
+                creneaux = uiState.creneauxTrouves,
+                onSaisieChange = viewModel::mettreAJourSaisie,
+                onEnvoyer = viewModel::envoyerMessage,
+            )
+        },
+    ) { innerPadding ->
+        LazyColumn(
+            state = listState,
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .imePadding(),
+        ) {
+            items(uiState.messages) { msg ->
+                BulleMessage(msg = msg, onSuggestion = viewModel::envoyerSuggestion)
+            }
+            if (uiState.isTyping) {
+                item {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        BulleDotAnimation()
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Composants privés
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun SeveriteBadge(severite: NiveauSeverite) {
+    val (bg, fg) = when (severite) {
+        NiveauSeverite.CRITIQUE -> Pair(Color(0xFFFDE8E8), ChatColors.urgenceCritique)
+        NiveauSeverite.MODERE -> Pair(Color(0xFFFEF3E8), ChatColors.consultationUrgente)
+        NiveauSeverite.ROUTINIER -> Pair(Color(0xFFEAF5FF), ChatColors.primaryBlue)
+        NiveauSeverite.ACCOMPAGNEMENT -> Pair(Color(0xFFE6FAF8), ChatColors.turquoiseAccent)
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(bg)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Estimation de sévérité", fontSize = 12.sp, color = ChatColors.textSecondary)
+            Spacer(Modifier.width(8.dp))
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(fg)
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
+            ) {
+                Text(severite.libelle, fontSize = 11.sp, color = Color.White, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+private fun BulleMessage(msg: TriageMessage, onSuggestion: (String) -> Unit) {
+    val estUtilisateur = msg.role == TriageRole.UTILISATEUR
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = if (estUtilisateur) Alignment.End else Alignment.Start,
+    ) {
+        // Bulle principale
+        Surface(
+            shape = RoundedCornerShape(
+                topStart = if (estUtilisateur) 16.dp else 4.dp,
+                topEnd = if (estUtilisateur) 4.dp else 16.dp,
+                bottomStart = 16.dp,
+                bottomEnd = 16.dp,
+            ),
+            color = if (estUtilisateur) ChatColors.primaryBlue else ChatColors.cardSurface,
+            shadowElevation = 1.dp,
+            modifier = Modifier.padding(horizontal = 4.dp),
+        ) {
+            Text(
+                text = msg.contenu,
+                fontSize = 14.sp,
+                color = if (estUtilisateur) Color.White else ChatColors.textMain,
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            )
+        }
+
+        // Suggestions rapides de l'IA
+        if (msg.suggestions.isNotEmpty()) {
+            Spacer(Modifier.height(6.dp))
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(msg.suggestions) { sug ->
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(ChatColors.lightBlueSurface)
+                            .clickable { onSuggestion(sug) }
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                    ) {
+                        Text(sug, fontSize = 12.sp, color = ChatColors.primaryBlue, fontWeight = FontWeight.Medium)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BulleDotAnimation() {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(ChatColors.cardSurface)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+    ) {
+        Text("···", fontSize = 20.sp, color = ChatColors.turquoiseAccent, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun SaisieBar(
+    saisie: String,
+    isTyping: Boolean,
+    medecinsDisponibles: Int,
+    creneaux: Int,
+    onSaisieChange: (String) -> Unit,
+    onEnvoyer: () -> Unit,
+) {
+    Surface(color = ChatColors.cardSurface, shadowElevation = 8.dp) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+            // Info médecins disponibles
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    "Médecins disponibles aujourd'hui",
+                    fontSize = 12.sp,
+                    color = ChatColors.textSecondary,
+                )
+                Text(
+                    "$medecinsDisponibles médecins · $creneaux créneaux trouvés",
+                    fontSize = 12.sp,
+                    color = ChatColors.validationSucces,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+
+            // Champ de saisie + envoi
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = saisie,
+                    onValueChange = onSaisieChange,
+                    placeholder = { Text("Décrivez vos symptômes...", fontSize = 13.sp) },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(24.dp),
+                    maxLines = 3,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ChatColors.primaryBlue,
+                        unfocusedBorderColor = Color(0xFFE2E8F0),
+                        cursorColor = ChatColors.primaryBlue,
+                    ),
+                )
+                Spacer(Modifier.width(8.dp))
+                IconButton(
+                    onClick = onEnvoyer,
+                    enabled = saisie.isNotBlank() && !isTyping,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(if (saisie.isNotBlank() && !isTyping) ChatColors.primaryBlue else Color(0xFFE2E8F0)),
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.Send,
+                        contentDescription = "Envoyer",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
+        }
+    }
+}
