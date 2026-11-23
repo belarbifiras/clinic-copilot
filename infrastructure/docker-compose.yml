@@ -93,6 +93,7 @@ services:
     environment:
       JAVA_TOOL_OPTIONS: -Xmx256m
       EUREKA_HOSTNAME: eureka-server
+      OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
     ports:
       - "8761:8761"
     healthcheck:
@@ -206,6 +207,7 @@ services:
       KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET}
       APP_INTERNAL_API_KEY: ${INTERNAL_API_KEY:-changeme-internal-key}
       EUREKA_URL: http://eureka-server:8761/eureka
+      OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
       JAVA_TOOL_OPTIONS: -Xmx256m
     depends_on:
       eureka-server:
@@ -229,6 +231,7 @@ services:
       KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
       EUREKA_URL: http://eureka-server:8761/eureka
+      OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
       JAVA_TOOL_OPTIONS: -Xmx256m
     depends_on:
       postgres:
@@ -278,6 +281,7 @@ services:
       RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-guest}
       JAVA_TOOL_OPTIONS: -Xmx256m
       EUREKA_URL: http://eureka-server:8761/eureka
+      OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
     depends_on:
       postgres:
         condition: service_healthy
@@ -297,6 +301,7 @@ services:
       EUREKA_URL: http://eureka-server:8761/eureka
       KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
+      OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
       LLM_BASE_URL: ${LLM_BASE_URL:-}
       LLM_API_KEY: ${LLM_API_KEY:-}
     depends_on:
@@ -317,6 +322,7 @@ services:
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
       JAVA_TOOL_OPTIONS: -Xmx256m
       EUREKA_URL: http://eureka-server:8761/eureka
+      OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
     depends_on:
       postgres:
         condition: service_healthy
@@ -335,6 +341,7 @@ services:
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
       JAVA_TOOL_OPTIONS: -Xmx256m
       EUREKA_URL: http://eureka-server:8761/eureka
+      OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
     depends_on:
       postgres:
         condition: service_healthy
@@ -353,6 +360,7 @@ services:
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
       JAVA_TOOL_OPTIONS: -Xmx256m
       EUREKA_URL: http://eureka-server:8761/eureka
+      OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
     depends_on:
       postgres:
         condition: service_healthy
@@ -371,6 +379,7 @@ services:
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
       JAVA_TOOL_OPTIONS: -Xmx256m
       EUREKA_URL: http://eureka-server:8761/eureka
+      OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
     depends_on:
       postgres:
         condition: service_healthy
