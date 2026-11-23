@@ -18,7 +18,7 @@ public class SecurityConfiguration {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/health/**", "/error").permitAll()
+                .requestMatchers("/actuator/health/**", "/actuator/prometheus", "/error").permitAll()
                 // order matters: /me must be matched before the catch-all admin rule
                 .requestMatchers("/api/patient-profiles/me").hasRole("PATIENT")
                 .requestMatchers("/api/patient-profiles/**").hasRole("ADMIN")

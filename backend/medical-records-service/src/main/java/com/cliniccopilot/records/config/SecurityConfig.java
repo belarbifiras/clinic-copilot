@@ -28,7 +28,7 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(a -> a
-                .requestMatchers("/actuator/health/**").permitAll()
+                .requestMatchers("/actuator/health/**", "/actuator/prometheus").permitAll()
                 // Écriture clinique : médecin uniquement
                 .requestMatchers(HttpMethod.POST, "/api/v1/consultations", "/api/v1/consultations/*/notes",
                         "/api/v1/medication-plans").hasRole("DOCTOR")

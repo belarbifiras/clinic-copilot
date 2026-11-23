@@ -28,7 +28,7 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(a -> a
-                .requestMatchers("/actuator/health/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/actuator/health/**", "/actuator/prometheus", "/error", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                 // Enregistrement de statistiques : service interne OU admin
                 .requestMatchers(HttpMethod.POST, "/api/v1/dashboard/snapshots").hasAnyRole("ADMIN", "INTERNAL_SERVICE")
                 // Tout le reste : ADMIN uniquement

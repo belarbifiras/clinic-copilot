@@ -18,11 +18,25 @@ app:
     keycloak:
       issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/clinic}
       jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/clinic/protocol/openid-connect/certs}
+
 management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,prometheus        # ajoute prometheus à la liste existante
+  # ... tes autres clés existantes restent ici ...
+  tracing:
+    sampling:
+      probability: 1.0
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTLP_TRACING_ENDPOINT:http://localhost:4318/v1/traces}
+  otlp:
+    metrics:
+      export:
+        enabled: false
 
 eureka:
   client:

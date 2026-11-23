@@ -100,7 +100,45 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-  
+
+
+  # -------------------------
+  # MONITORING (Prometheus / Tempo / Grafana)
+  # -------------------------
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9091:9090"
+
+  tempo:
+    image: grafana/tempo:latest
+    restart: unless-stopped
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./monitoring/tempo.yaml:/etc/tempo.yaml:ro
+      - tempo_data:/var/tempo
+    ports:
+      - "3200:3200"
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    volumes:
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - tempo
+
   # -------------------------
   # API GATEWAY
   # -------------------------
@@ -127,6 +165,7 @@ services:
       CHAT_URL: http://chat-service:3000
       NOTIFICATION_SERVICE_URL: http://notification-service:8087
       NOTIFICATION_URL: http://notification-service:8087
+      OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
     ports:
       - "8080:8080"
     depends_on:
@@ -212,6 +251,7 @@ services:
       APP_INTERNAL_API_KEY: ${INTERNAL_API_KEY:-changeme-internal-key}
       JAVA_TOOL_OPTIONS: -Xmx256m
       EUREKA_URL: http://eureka-server:8761/eureka
+      OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
     depends_on:
       postgres:
         condition: service_healthy
@@ -257,6 +297,8 @@ services:
       EUREKA_URL: http://eureka-server:8761/eureka
       KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/clinic
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -362,3 +404,5 @@ volumes:
   chat_mongo_data:
   diplomas_data:
   keycloak_data:
+  tempo_data:
+  grafana_data:

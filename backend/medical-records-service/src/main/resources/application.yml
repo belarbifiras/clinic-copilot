@@ -27,7 +27,13 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,prometheus
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${OTLP_TRACING_ENDPOINT:http://localhost:4318/v1/traces}
 
 eureka:
   client:
