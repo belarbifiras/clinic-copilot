@@ -104,6 +104,21 @@ services:
 
 
   # -------------------------
+  # CONFIG-SERVER 
+  # -------------------------
+
+  config-server:
+    build: ../backend/config-server
+    ports:
+      - "8888:8888"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8888'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+
+  # -------------------------
   # MONITORING (Prometheus / Tempo / Grafana)
   # -------------------------
 
