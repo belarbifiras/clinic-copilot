@@ -172,4 +172,6 @@ export const routes: Routes = [
       },
     ],
   },
+  { path: 'assistant', redirectTo: 'espace-patient/assistant', pathMatch: 'full' },
+  { path: '**', redirectTo: '' },
 ];

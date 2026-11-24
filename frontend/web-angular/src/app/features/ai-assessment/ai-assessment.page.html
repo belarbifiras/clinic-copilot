@@ -1,0 +1,104 @@
+<section class="assistant" [attr.dir]="lang === 'ar' ? 'rtl' : 'ltr'">
+  <header class="top">
+    <h1>Assistant IA</h1>
+    <span class="tag">Orientation, pas un diagnostic</span>
+  </header>
+
+  <div class="log" #log role="log" aria-live="polite" aria-label="Conversation avec l'assistant">
+    @for (m of messages(); track m.id) {
+      @if (m.kind === 'text') {
+          <p class="bubble" [class.user]="m.role === 'user'" [class.small]="m.small">{{ m.text }}</p>
+      } @else if (m.kind === 'question') {
+          <div class="bubble">
+            <p>{{ m.text }}</p>
+            @if (m.options.length) {
+              <div class="chips">
+                @for (o of m.options; track o) {
+                  <button type="button" class="chip" [disabled]="busy()" (click)="send(o)">{{ o }}</button>
+                }
+              </div>
+            }
+          </div>
+      } @else if (m.kind === 'result') {
+          @let s = m.session;
+          @let a = s.assessment!;
+          @if (s.emergency) {
+            <div class="emergency" role="alert">
+              <h2>Urgence vitale : appelez les secours maintenant</h2>
+              <ul>
+                @for (t of s.interimAdvice; track t) { <li>{{ t }}</li> }
+              </ul>
+              @if (emergencyNumber) {
+                <a class="call" [href]="'tel:' + emergencyNumber">Appeler les secours</a>
+              }
+              <p class="note">Ces consignes ne remplacent pas les secours.</p>
+            </div>
+          } @else {
+            <div class="bubble">
+              <p>{{ a.patient_explanation }}</p>
+              <div class="level" [style.--lvl]="levelColor(a.urgency_level)">
+                <strong>{{ meta[a.urgency_level].label }}</strong>
+                <span>{{ meta[a.urgency_level].hint }}</span>
+              </div>
+              @if (a.possible_conditions.length) {
+                <p class="causes">
+                  Pistes possibles :
+                  @for (c of a.possible_conditions; track c.label) {
+                    <span class="chip static">{{ c.label }}</span>
+                  }
+                </p>
+              }
+              @if (s.bookingAllowed) {
+                <button type="button" class="primary" (click)="toggleDoctors(m.id)">Voir les médecins</button>
+                @if (openDoctors().has(m.id)) {
+                  @if (s.suggestedDoctors.length) {
+                    <ul class="doctors">
+                      @for (d of s.suggestedDoctors; track d.id) {
+                        <li>
+                          <strong>{{ d.displayName }}</strong>
+                          <span>{{ d.city }}@if (d.distanceKm !== null) { · {{ d.distanceKm }} km à vol d'oiseau }</span>
+                        </li>
+                      }
+                    </ul>
+                  } @else {
+                    <p class="note">
+                      Aucun médecin à proposer pour le moment : partagez votre position avant votre prochain message pour voir les plus proches.
+                    </p>
+                  }
+                }
+              }
+            </div>
+          }
+      }
+    }
+    @if (busy()) {
+      <p class="bubble typing">Analyse en cours, cela peut prendre jusqu'à une minute…</p>
+    }
+  </div>
+
+  <footer class="composer">
+    <div class="loc">
+      @if (location()) {
+        <span class="chip static">Position partagée, non conservée</span>
+      } @else {
+        <button type="button" class="chip" (click)="shareLocation()">Partager ma position (facultatif)</button>
+      }
+      @if (locationError()) { <span class="note">Position refusée ou indisponible.</span> }
+    </div>
+    <div class="row">
+      <input
+        type="text"
+        [value]="draft()"
+        (input)="onInput($event)"
+        (keydown.enter)="send()"
+        [disabled]="busy()"
+        maxlength="2000"
+        placeholder="Écrivez un message..."
+        aria-label="Votre message"
+      />
+      <button type="button" class="send" [disabled]="busy() || !draft().trim()" (click)="send()" aria-label="Envoyer">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 20l18-8L3 4v6l12 2-12 2z" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </footer>
+</section>

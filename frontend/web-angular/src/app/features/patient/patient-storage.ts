@@ -10,10 +10,23 @@ export function sessionEmail(): string {
 export function loadJson<T>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key);
-    return raw ? ({ ...(fallback as object), ...JSON.parse(raw) } as T) : fallback;
+    if (!raw) return fallback;
+
+    const parsed: unknown = JSON.parse(raw);
+    if (Array.isArray(fallback)) {
+      return (Array.isArray(parsed) ? parsed : fallback) as T;
+    }
+    if (isRecord(fallback)) {
+      return (isRecord(parsed) ? { ...fallback, ...parsed } : fallback) as T;
+    }
+    return parsed as T;
   } catch {
     return fallback;
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export function saveJson(key: string, value: unknown): void {

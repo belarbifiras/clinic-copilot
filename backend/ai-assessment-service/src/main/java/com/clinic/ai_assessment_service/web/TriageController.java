@@ -31,11 +31,14 @@ public class TriageController {
         this.service = service;
     }
 
+    /** Sans jeton (mode permit-all pour tester l'assistant) : identifiant patient par défaut. */
+    private static final String DEFAULT_PATIENT_REF = "patient-demo";
+
     private static String patientRef(Authentication auth) {
         if (auth instanceof JwtAuthenticationToken t) {
             return t.getToken().getSubject();
         }
-        return auth.getName();
+        return auth != null ? auth.getName() : DEFAULT_PATIENT_REF;
     }
 
     @PostMapping

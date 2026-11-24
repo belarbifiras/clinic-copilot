@@ -33,6 +33,10 @@ public class PrecautionPolicy {
     }
 
     public PolicyResult apply(TriageAssessment a) {
+        if (!a.requiresConsultation()) {
+            return new PolicyResult(a, List.of());
+        }
+
         UrgencyLevel level = a.urgencyLevel();
         List<String> adjustments = new ArrayList<>();
 

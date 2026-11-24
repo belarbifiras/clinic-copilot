@@ -26,23 +26,33 @@ app:
     # ATTENTION : true = développement seulement (aucune authentification).
     # Doit passer à false (et JWT branché) avant toute démonstration réelle.
     permit-all: ${APP_SECURITY_PERMIT_ALL:true}
+    # Version validée (votre partie) : validation des jetons Keycloak, comme les autres services.
+    keycloak:
+      issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/clinic}
+      jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/clinic/protocol/openid-connect/certs}
 
 ai:
-  prompt-version: triage-v4
+  prompt-version: triage-v5
   doctor-summary-language: fr
   low-confidence-threshold: 0.5
-  clarification-enabled: true
+  clarification-enabled: ${AI_CLARIFICATION_ENABLED:true}   # Activé par défaut : permet les questions de clarification si nécessaire
   max-concurrent-requests: 1     # une requête LLM à la fois (économie de mémoire)
   queue-wait-seconds: 90
   ollama:
-    base-url: ${OLLAMA_BASE_URL:http://host.docker.internal:11434}
-    model: ${AI_MODEL:medgemma:4b}
+    base-url: ${OLLAMA_BASE_URL:}
+    model: ${AI_MODEL:google/medgemma-4b-it}
     connect-timeout-seconds: 3
     read-timeout-seconds: 120
     num-ctx: 3072
     num-predict: 800
     temperature: 0.1
     keep-alive: 30m
+  llm:
+    base-url: ${LLM_BASE_URL:}
+    api-key: ${LLM_API_KEY:}
+    model: ${AI_MODEL:google/medgemma-4b-it}
+    connect-timeout-seconds: 10
+    read-timeout-seconds: 180
   # Codes de spécialités : DOIVENT être alignés avec doctor-directory-service (à vérifier avec le collègue)
   allowed-specialties:
     - general_medicine

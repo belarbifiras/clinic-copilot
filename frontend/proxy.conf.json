@@ -1,0 +1,10 @@
+{
+  "/api/triage": {
+    "target": "http://localhost:8090",
+    "secure": false,
+    "changeOrigin": true,
+    "timeout": 180000,
+    "proxyTimeout": 180000,
+    "pathRewrite": { "^/api/triage": "/triage" }
+  }
+}

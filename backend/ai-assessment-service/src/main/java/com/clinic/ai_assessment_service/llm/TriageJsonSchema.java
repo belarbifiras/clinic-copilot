@@ -39,10 +39,12 @@ public final class TriageJsonSchema {
         props.putObject("patient_explanation").put("type", "string");
         props.putObject("doctor_summary").put("type", "string");
         props.putObject("followup_questions").put("type", "array").putObject("items").put("type", "string");
+        props.putObject("consultation_recommended").put("type", "boolean");
 
         ArrayNode required = schema.putArray("required");
         List.of("urgency_level", "confidence", "possible_conditions", "recommended_specialty",
-                "red_flags_detected", "patient_explanation", "doctor_summary", "followup_questions")
+                "red_flags_detected", "patient_explanation", "doctor_summary", "followup_questions",
+                "consultation_recommended")
                 .forEach(required::add);
         schema.put("additionalProperties", false);
         return schema;

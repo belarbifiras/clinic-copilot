@@ -14,15 +14,20 @@ import {
   LucideCircleCheck,
   LucideClock,
   LucideExternalLink,
+  LucideHistory,
   LucideMapPin,
+  LucideMessageCircle,
   LucidePhone,
+  LucidePlus,
   LucideRotateCcw,
   LucideSend,
   LucideShieldAlert,
   LucideStethoscope,
   LucideThermometer,
+  LucideTrash2,
   LucideTriangleAlert,
   LucideWind,
+  LucideX,
 } from '@lucide/angular';
 import { Icon } from '../../shared/ui/icon';
 import { Modal } from './overlays';
@@ -34,6 +39,7 @@ import {
   TriageSession,
   TriageStartRequest,
 } from './assistant.service';
+import { detectTriageLanguage } from './assistant-language';
 import { PatientAppointments } from './patient-appointments';
 import { AuthService } from '../../core/auth/auth.service';
 import { loadJson, saveJson, sessionEmail } from './patient-storage';
@@ -75,27 +81,32 @@ interface Coords {
   longitude: number;
 }
 
-/** Conversation conservée entre deux sessions/rechargements, par patient. */
+/** Conversation courante sauvegardée */
 interface SavedConversation {
+  convId: string;
   messages: Bubble[];
   sessionId: string | null;
   lastSymptoms: string;
   specialtyLabel: string;
   n: number;
+  language?: TriageLanguage;
 }
 
-function conversationKey(): string {
-  return `cc_assistant_${sessionEmail()}`;
-}
-
-/** Conversation archivée dans l'historique — separée de la conversation courante. */
-interface ConvHistorique {
+/** Conversation archivée dans l'historique */
+export interface ConvHistorique {
   id: string;
   title: string;
   savedAt: string;
   specialtyLabel: string;
   messages: Bubble[];
-  expanded?: boolean;
+  sessionId?: string | null;
+  lastSymptoms?: string;
+  n?: number;
+  language?: TriageLanguage;
+}
+
+function conversationKey(): string {
+  return `cc_assistant_${sessionEmail()}`;
 }
 
 function historiqueKey(): string {
@@ -155,7 +166,7 @@ function parseQuestionAndOptions(q: string): { questionText: string; options: st
       <section class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-soft" aria-label="Assistant Médical IA">
         
         <!-- En-tête épuré et moderne -->
-        <header class="flex shrink-0 items-center justify-between border-b border-border/80 bg-card/90 px-5 py-3.5 backdrop-blur">
+        <header class="flex shrink-0 items-center justify-between border-b border-border/80 bg-card/90 px-4 py-3 backdrop-blur sm:px-5 sm:py-3.5">
           <div class="flex items-center gap-3">
             <div class="relative grid h-10 w-10 place-items-center rounded-2xl bg-gradient-primary text-white shadow-sm">
               @if (typing()) { <span class="pulse-ring absolute inset-0 rounded-2xl bg-primary/40"></span> }
@@ -168,15 +179,28 @@ function parseQuestionAndOptions(q: string): { questionText: string; options: st
               </div>
               <p class="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <span class="h-2 w-2 rounded-full" [class]="typing() ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'"></span>
-                {{ typing() ? 'Analyse médicale en cours…' : 'En ligne · Prêt à vous orienter' }}
+                {{ typing() ? 'Analyse médicale en cours…' : 'En ligne · Orientation clinique intelligente' }}
               </p>
             </div>
           </div>
 
           <div class="flex items-center gap-2">
-            <button type="button" class="btn btn-ghost text-xs text-muted-foreground hover:text-deep" (click)="restart()">
-              <app-icon [icon]="Restart" [size]="14" />
-              <span class="hidden sm:inline">Nouvelle conversation</span>
+            <!-- Bouton pour afficher/masquer l'historique sur tous les écrans -->
+            <button type="button" class="btn btn-ghost text-xs text-muted-foreground hover:text-deep flex items-center gap-1.5"
+              (click)="showHistory.set(!showHistory())" title="Historique des consultations">
+              <app-icon [icon]="History" [size]="15" />
+              <span class="hidden sm:inline">Historique</span>
+              @if (historique().length) {
+                <span class="grid h-4.5 min-w-4.5 place-items-center rounded-full bg-primary/15 px-1 text-[10px] font-bold text-primary">
+                  {{ historique().length }}
+                </span>
+              }
+            </button>
+
+            <!-- Bouton Nouvelle conversation -->
+            <button type="button" class="btn btn-ghost text-xs text-muted-foreground hover:text-deep flex items-center gap-1" (click)="restart()">
+              <app-icon [icon]="Plus" [size]="15" />
+              <span class="hidden sm:inline">Nouvelle consultation</span>
             </button>
           </div>
         </header>
@@ -219,13 +243,22 @@ function parseQuestionAndOptions(q: string): { questionText: string; options: st
                     </div>
                   }
 
+                  <!-- Badge niveau d'urgence -->
+                  @if (m.code && levelConfig[m.code]) {
+                    <div class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border"
+                      [class]="levelConfig[m.code].cls">
+                      <app-icon [icon]="levelIcon(levelConfig[m.code].level)" [size]="13" />
+                      <span>{{ levelConfig[m.code].label }}</span>
+                    </div>
+                  }
+
                   <!-- Contenu textuel principal -->
                   <p dir="auto" class="text-[15px] leading-relaxed text-deep whitespace-pre-line">{{ m.text }}</p>
 
                   <!-- Options rapides en cas de question de clarification -->
                   @if (m.options?.length) {
                     <div class="pt-1">
-                      <p class="mb-2 text-xs font-medium text-muted-foreground">Sélectionnez ou tapez votre réponse :</p>
+                      <p class="mb-2 text-xs font-medium text-muted-foreground">Sélectionnez une réponse ou écrivez la vôtre :</p>
                       <div class="flex flex-wrap gap-2">
                         @for (opt of m.options; track opt) {
                           <button type="button" (click)="ask(opt)"
@@ -277,7 +310,7 @@ function parseQuestionAndOptions(q: string): { questionText: string; options: st
                     </div>
                   }
 
-                  <!-- Professionnel de santé conseillé (meilleur selon le cas) -->
+                  <!-- Professionnel de santé conseillé -->
                   @if (m.specialty && !m.emergency) {
                     <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-3 sm:p-4">
                       <div class="flex items-center gap-2.5">
@@ -295,7 +328,7 @@ function parseQuestionAndOptions(q: string): { questionText: string; options: st
                     </div>
                   }
 
-                  <!-- Médecins recommandés les plus proches avec bouton de prise de rendez-vous immédiat -->
+                  <!-- Médecins recommandés les plus proches -->
                   @if (m.doctors?.length) {
                     <div class="space-y-2.5 pt-1">
                       <p class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
@@ -396,18 +429,9 @@ function parseQuestionAndOptions(q: string): { questionText: string; options: st
         <!-- Barre de saisie simple et épurée -->
         <div class="border-t border-border/80 bg-card p-3 sm:px-6">
           <form class="flex items-center gap-2" (submit)="$event.preventDefault(); ask(draft())">
-            <!-- Sélecteur de langue compact -->
-            <div class="relative shrink-0">
-              <select class="field h-11 rounded-full px-3 text-xs font-semibold uppercase text-deep" [value]="lang()" (change)="lang.set($any($event.target).value)">
-                @for (l of langs; track l) {
-                  <option [value]="l">{{ l }}</option>
-                }
-              </select>
-            </div>
-
             <!-- Champ texte -->
             <input class="field h-11 flex-1 rounded-full px-5 text-sm" dir="auto" maxlength="2000"
-              [placeholder]="placeholder()" aria-label="Vos symptômes"
+              [placeholder]="placeholder()" aria-label="Vos symptômes ou votre question de santé"
               [value]="draft()" (input)="draft.set($any($event.target).value)" />
 
             <!-- Bouton envoyer -->
@@ -418,41 +442,84 @@ function parseQuestionAndOptions(q: string): { questionText: string; options: st
         </div>
       </section>
 
-      <!-- Historique : conversations passées archivées, à côté du chat -->
-      <aside class="hidden lg:block w-72 shrink-0 space-y-2 overflow-y-auto rounded-3xl border border-border bg-card p-3 shadow-soft" aria-label="Historique des conversations">
-        <div class="flex items-center justify-between gap-2 pb-2">
-          <p class="text-xs font-bold uppercase tracking-wide text-muted-foreground">Historique ({{ historique().length }})</p>
-          @if (historique().length) {
-            <button type="button" class="text-xs font-semibold text-primary hover:underline" (click)="historique.set([])">Effacer</button>
-          }
-        </div>
-        @for (h of historique(); track h.id) {
-          <div class="overflow-hidden rounded-xl border border-border/80 bg-card">
-            <div class="flex items-center gap-2 px-2.5 py-2">
-              <span class="min-w-0 flex-1 truncate text-xs font-semibold text-deep" [title]="h.title">{{ h.title }}</span>
-              <span class="shrink-0 text-[10px] text-muted-foreground">{{ fmtDate(h.savedAt) }}</span>
-            </div>
-            @if (h.specialtyLabel) {
-              <p class="border-t border-border/70 px-2.5 py-1.5 text-[11px] text-muted-foreground">{{ h.specialtyLabel }}</p>
-            }
-            <div class="overflow-hidden px-2.5 pb-2" [class.h-0]="!(h.expanded ?? false)" [class.max-h-72]="(h.expanded ?? false)">
-              <div class="space-y-2">
-                @for (m of h.messages; track m.id) {
-                  @if (m.from === 'me') {
-                    <p class="text-right text-xs font-medium text-deep">{{ m.text }}</p>
-                  } @else {
-                    <p class="text-xs leading-snug text-deep/80 whitespace-pre-line">{{ m.text }}</p>
-                  }
-                }
-              </div>
-            </div>
-            <button type="button" class="w-full rounded-lg px-2.5 py-1.5 text-left text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-soft/60" (click)="toggleHist(h.id)">
-              {{ (h.expanded ?? false) ? 'Masquer' : 'Voir le détail' }}
+      <!-- PANNEAU HISTORIQUE DES CONSULTATIONS (responsive & interactif) -->
+      @if (showHistory()) {
+        <!-- Backdrop sur mobile -->
+        <div class="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs lg:hidden" (click)="showHistory.set(false)"></div>
+      }
+      <aside [class.translate-x-0]="showHistory()" [class.hidden]="!showHistory()"
+        class="fixed inset-y-0 right-0 z-50 flex w-80 flex-col border-l border-border bg-card p-4 shadow-xl transition-transform lg:static lg:z-auto lg:flex lg:w-80 lg:rounded-3xl lg:border lg:shadow-soft"
+        aria-label="Historique des consultations">
+        
+        <!-- En-tête de l'historique -->
+        <div class="flex items-center justify-between border-b border-border/80 pb-3">
+          <div class="flex items-center gap-2">
+            <app-icon [icon]="History" [size]="18" class="text-primary" />
+            <h2 class="text-sm font-bold text-deep">Historique</h2>
+            <span class="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">{{ historique().length }}</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <button type="button" class="btn btn-hero py-1 px-2.5 text-xs font-semibold flex items-center gap-1" (click)="restart()" title="Nouvelle consultation">
+              <app-icon [icon]="Plus" [size]="14" />
+              <span>Nouveau</span>
+            </button>
+            <button type="button" class="btn btn-ghost p-1 text-muted-foreground lg:hidden" (click)="showHistory.set(false)" aria-label="Fermer">
+              <app-icon [icon]="X" [size]="18" />
             </button>
           </div>
-        }
-        @if (!historique().length) {
-          <p class="px-1 py-3 text-center text-xs text-muted-foreground">Aucune conversation archivée.</p>
+        </div>
+
+        <!-- Liste des discussions -->
+        <div class="min-h-0 flex-1 space-y-2 overflow-y-auto py-3">
+          @for (h of historique(); track h.id) {
+            <div class="group relative flex flex-col justify-between rounded-2xl border p-3 transition-all cursor-pointer"
+              [class]="currentConvId() === h.id ? 'border-primary bg-primary/5 shadow-xs' : 'border-border/80 bg-card hover:border-primary/40 hover:bg-soft/40'"
+              (click)="loadConversation(h)">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg"
+                    [class]="currentConvId() === h.id ? 'bg-gradient-primary text-white' : 'bg-primary/10 text-primary'">
+                    <app-icon [icon]="Chat" [size]="14" />
+                  </span>
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate text-xs font-bold text-deep leading-tight" [title]="h.title">{{ h.title }}</p>
+                    <p class="text-[10px] text-muted-foreground mt-0.5">{{ fmtDate(h.savedAt) }}</p>
+                  </div>
+                </div>
+
+                <!-- Bouton supprimer la discussion -->
+                <button type="button" class="opacity-60 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-opacity"
+                  (click)="$event.stopPropagation(); deleteConv(h.id)" title="Supprimer cette consultation">
+                  <app-icon [icon]="Trash" [size]="13" />
+                </button>
+              </div>
+
+              @if (h.specialtyLabel) {
+                <div class="mt-2 flex items-center gap-1.5">
+                  <span class="inline-block rounded-md bg-soft px-2 py-0.5 text-[10px] font-medium text-deep">
+                    {{ h.specialtyLabel }}
+                  </span>
+                </div>
+              }
+            </div>
+          }
+          @if (!historique().length) {
+            <div class="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+              <span class="grid h-12 w-12 place-items-center rounded-2xl bg-soft text-muted-foreground mb-2">
+                <app-icon [icon]="Chat" [size]="20" />
+              </span>
+              <p class="text-xs font-semibold text-deep">Aucun historique pour l'instant</p>
+              <p class="text-[11px] text-muted-foreground mt-1 max-w-[200px]">Vos échanges avec l'assistant seront automatiquement conservés ici.</p>
+            </div>
+          }
+        </div>
+
+        @if (historique().length > 1) {
+          <div class="border-t border-border/80 pt-2 text-right">
+            <button type="button" class="text-[11px] font-medium text-muted-foreground hover:text-destructive" (click)="clearAllHistory()">
+              Effacer tout l'historique
+            </button>
+          </div>
         }
       </aside>
     </div>
@@ -532,6 +599,7 @@ export class AssistantPage {
   private readonly toasts = inject(Toasts);
   private readonly api = inject(AssistantService);
   private readonly apptSvc = inject(PatientAppointments);
+  private readonly auth = inject(AuthService);
 
   protected readonly Bot = LucideBot;
   protected readonly Send = LucideSend;
@@ -545,6 +613,11 @@ export class AssistantPage {
   protected readonly Cal = LucideCalendar;
   protected readonly ExtLink = LucideExternalLink;
   protected readonly Clock = LucideClock;
+  protected readonly History = LucideHistory;
+  protected readonly Plus = LucidePlus;
+  protected readonly Trash = LucideTrash2;
+  protected readonly Chat = LucideMessageCircle;
+  protected readonly X = LucideX;
   protected readonly levelConfig = LEVEL_CONFIG;
 
   protected readonly suggestions = [
@@ -554,11 +627,14 @@ export class AssistantPage {
     { label: 'Douleur au dos suite à un effort', icon: LucideActivity },
   ];
 
-  // Réglages
-  protected readonly langs: TriageLanguage[] = ['fr', 'ar', 'en'];
+  // La langue est détectée à partir du dernier message de l'utilisateur.
   protected readonly lang = signal<TriageLanguage>('fr');
 
-  // Conversation (restaurée depuis localStorage si elle existe)
+  // Identifiant de la discussion en cours
+  protected readonly currentConvId = signal<string>(crypto.randomUUID());
+  protected readonly showHistory = signal<boolean>(true);
+
+  // Fil de messages
   private readonly scroller = viewChild<ElementRef<HTMLElement>>('scroller');
   private n = 1;
   protected readonly messages = signal<Bubble[]>([]);
@@ -571,10 +647,9 @@ export class AssistantPage {
   private answers: string[] = [];
   private lastSymptoms = '';
   protected readonly currentSpecialtyLabel = signal<string>('');
-  // Historique des conversations passées archivées (separée de la conversation courante).
-  protected readonly historique = signal<ConvHistorique[]>(loadJson<ConvHistorique[]>(historiqueKey(), []));
-  private readonly auth = inject(AuthService);
-  private hadSession = false;
+
+  // Historique des conversations
+  protected readonly historique = signal<ConvHistorique[]>([]);
 
   // Prise de RDV direct
   protected readonly bookingDoctor = signal<DoctorSuggestion | null>(null);
@@ -601,16 +676,28 @@ export class AssistantPage {
   });
 
   constructor() {
+    // 1. Charger l'historique archivé
+    const hist = loadJson<ConvHistorique[]>(historiqueKey(), []);
+    this.historique.set(hist);
+
+    // 2. Charger la conversation en cours
     const saved = loadJson<SavedConversation | null>(conversationKey(), null);
     if (saved && Array.isArray(saved.messages) && saved.messages.length > 0) {
+      this.currentConvId.set(saved.convId || (hist.length > 0 ? hist[0].id : crypto.randomUUID()));
       this.messages.set(saved.messages);
+      this.lang.set(saved.language ?? this.languageFromMessages(saved.messages));
       this.n = typeof saved.n === 'number' ? saved.n : 1;
       this.sessionId = saved.sessionId ?? null;
       this.lastSymptoms = saved.lastSymptoms ?? '';
       this.currentSpecialtyLabel.set(saved.specialtyLabel ?? '');
+    } else if (hist.length > 0) {
+      // Si aucune en cours mais historique existant, charger la plus récente
+      this.loadConversation(hist[0]);
     } else {
       this.messages.set([this.greeting()]);
     }
+
+    // Scroll automatique vers le bas à chaque nouveau message
     effect(() => {
       this.messages();
       this.typing();
@@ -619,39 +706,120 @@ export class AssistantPage {
         if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
       }, 50);
     });
-    // Historique : au retour d'une déconnexion (transition session -> null), archiver la
-    // conversation courante dans l'historique et commencer une nouvelle conversation.
-    effect(() => {
-      const s = this.auth.session();
-      if (this.hadSession && !s) {
-        this.archiveCurrent();
-        this.startNew();
-      }
-      this.hadSession = !!s;
-    });
   }
 
-  /** Sauvegarde la conversation (messages, session, contexte) : pas de perte à rechargement ni logout. */
-  private persist(): void {
+  /** Sauvegarde l'état courant et met à jour l'historique sans rien perdre */
+  private persistCurrent(): void {
     saveJson(conversationKey(), {
+      convId: this.currentConvId(),
+      messages: this.messages(),
+      sessionId: this.sessionId,
+      lastSymptoms: this.lastSymptoms,
+      specialtyLabel: this.currentSpecialtyLabel(),
+      n: this.n,
+      language: this.lang(),
+    });
+    this.syncWithHistory();
+  }
+
+  /** Met à jour ou ajoute la conversation courante dans l'historique */
+  private syncWithHistory(): void {
+    const messages = this.messages();
+    const userMsgs = messages.filter((m) => m.from === 'me');
+    if (userMsgs.length === 0) return;
+
+    const rawTitle = userMsgs[0].text.trim();
+    const title = rawTitle.length > 55 ? rawTitle.slice(0, 55) + '…' : rawTitle;
+    const id = this.currentConvId();
+
+    this.historique.update((list) => {
+      const idx = list.findIndex((c) => c.id === id);
+      const item: ConvHistorique = {
+        id,
+        title,
+        savedAt: new Date().toISOString(),
+        specialtyLabel: this.currentSpecialtyLabel(),
+        messages: [...messages],
+        sessionId: this.sessionId,
+        lastSymptoms: this.lastSymptoms,
+        n: this.n,
+        language: this.lang(),
+      };
+      if (idx >= 0) {
+        const updated = [...list];
+        updated[idx] = item;
+        return updated;
+      }
+      return [item, ...list];
+    });
+
+    saveJson(historiqueKey(), this.historique());
+  }
+
+  /** Charger une discussion passée dans la vue active */
+  protected loadConversation(h: ConvHistorique): void {
+    this.currentConvId.set(h.id);
+    this.messages.set([...h.messages]);
+    this.lang.set(h.language ?? this.languageFromMessages(h.messages));
+    this.sessionId = h.sessionId ?? null;
+    this.lastSymptoms = h.lastSymptoms ?? '';
+    this.currentSpecialtyLabel.set(h.specialtyLabel ?? '');
+    this.n = h.n ?? h.messages.length;
+    this.typing.set(false);
+
+    // Sauvegarde la sélection comme conversation courante
+    saveJson(conversationKey(), {
+      convId: h.id,
       messages: this.messages(),
       sessionId: this.sessionId,
       lastSymptoms: this.lastSymptoms,
       specialtyLabel: this.currentSpecialtyLabel(),
       n: this.n,
     });
+
+    // Sur mobile, ferme automatiquement le panneau d'historique
+    if (window.innerWidth < 1024) {
+      this.showHistory.set(false);
+    }
+  }
+
+  /** Supprime une consultation de l'historique */
+  protected deleteConv(id: string): void {
+    this.historique.update((list) => list.filter((c) => c.id !== id));
+    saveJson(historiqueKey(), this.historique());
+    if (this.currentConvId() === id) {
+      this.restart();
+    }
+  }
+
+  /** Efface tout l'historique */
+  protected clearAllHistory(): void {
+    this.historique.set([]);
+    saveJson(historiqueKey(), []);
+    this.restart();
   }
 
   private greeting(): Bubble {
+    const l = this.lang();
+    let text = 'Bonjour ! Je suis votre assistant médical Clinic Copilot. Décrivez-moi vos symptômes ou posez votre question de santé, et je vais analyser votre état, répondre à vos questions et vous orienter vers les meilleurs spécialistes.';
+    if (l === 'ar') {
+      text = 'مرحباً بك! أنا مساعدك الطبي الذكي في Clinic Copilot. صف لي أعراضك أو استفسارك الصحي، وسأقوم بتحليل حالتك ومساعدتك وتوجيهك إلى أفضل الأطباء والمختصين.';
+    } else if (l === 'en') {
+      text = 'Hello! I am your Clinic Copilot medical assistant. Describe your symptoms or ask a health question, and I will analyze your condition, answer your questions, and guide you to the best specialists.';
+    }
     return {
       id: 1,
       from: 'bot',
-      text: 'Bonjour ! Je suis votre assistant médical Clinic Copilot. Décrivez-moi vos symptômes ou ce qui vous préoccupe, et je vais analyser votre état, vous expliquer les possibilités et vous orienter vers les meilleurs spécialistes.',
+      text,
     };
   }
 
   protected placeholder(): string {
-    return this.sessionId ? 'Votre réponse…' : 'Décrivez vos symptômes…';
+    const l = this.lang();
+    if (this.sessionId) {
+      return l === 'ar' ? 'إجابتك على السؤال…' : l === 'en' ? 'Your answer to the question…' : 'Votre réponse à la question…';
+    }
+    return l === 'ar' ? 'صف أعراضك أو استفسارك الصحي…' : l === 'en' ? 'Describe your symptoms or ask a health question…' : 'Décrivez vos symptômes ou posez une question médicale…';
   }
 
   protected levelIcon(l: Level) {
@@ -676,47 +844,39 @@ export class AssistantPage {
     this.lastSymptoms = '';
   }
 
+  private languageFromMessages(messages: Bubble[]): TriageLanguage {
+    const lastUserMessage = [...messages].reverse().find((message) => message.from === 'me');
+    return lastUserMessage
+      ? detectTriageLanguage(lastUserMessage.text, this.lang())
+      : this.lang();
+  }
+
   private say(b: Omit<Bubble, 'id' | 'from'>): void {
     this.messages.update((l) => [...l, { id: ++this.n, from: 'bot', ...b }]);
-    this.persist();
+    this.persistCurrent();
   }
 
+  /** Lance une nouvelle consultation propre tout en conservant la précédente */
   protected restart(): void {
-    // Archiver la conversation courante dans l'historique avant de recommencer.
-    this.archiveCurrent();
-    this.startNew();
-  }
-
-  /** Commence une nouvelle conversation (réinitialise la conversation courante). */
-  private startNew(): void {
+    this.currentConvId.set(crypto.randomUUID());
     this.n = 1;
     this.typing.set(false);
     this.resetSession();
     this.messages.set([this.greeting()]);
-    this.persist();
-    saveJson(historiqueKey(), this.historique());
-  }
-
-  /** Archiver la conversation courante dans l'historique si elle contient des échanges. */
-  private archiveCurrent(): void {
-    const messages = this.messages();
-    const userMsgs = messages.filter((m) => m.from === 'me');
-    if (userMsgs.length === 0) return;
-    this.historique.update((h) => [{
-      id: crypto.randomUUID(),
-      title: userMsgs[0].text.slice(0, 80),
-      savedAt: new Date().toISOString(),
-      specialtyLabel: this.currentSpecialtyLabel(),
-      messages: [...messages],
-    }, ...h]);
-    saveJson(historiqueKey(), this.historique());
-  }
-
-  protected toggleHist(id: string): void {
-    this.historique.update((h) => h.map((e) => (e.id === id ? { ...e, expanded: !e.expanded } : e)));
+    this.currentSpecialtyLabel.set('');
+    saveJson(conversationKey(), {
+      convId: this.currentConvId(),
+      messages: this.messages(),
+      sessionId: null,
+      lastSymptoms: '',
+      specialtyLabel: '',
+      n: 1,
+      language: this.lang(),
+    });
   }
 
   protected fmtDate(iso: string): string {
+    if (!iso) return '';
     const d = new Date(iso);
     return d.toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   }
@@ -724,8 +884,9 @@ export class AssistantPage {
   protected async ask(text: string): Promise<void> {
     const t = text.trim();
     if (!t || this.typing()) return;
+    this.lang.set(detectTriageLanguage(t, this.lang()));
     this.messages.update((l) => [...l, { id: ++this.n, from: 'me', text: t }]);
-    this.persist();
+    this.persistCurrent();
     this.draft.set('');
 
     // Si on est dans un cycle de clarification
@@ -734,8 +895,13 @@ export class AssistantPage {
       if (this.answers.length < this.questions.length) {
         const i = this.answers.length;
         const parsed = parseQuestionAndOptions(this.questions[i]);
+        const thanks = this.lang() === 'ar'
+          ? 'شكراً لإجابتك.'
+          : this.lang() === 'en'
+          ? 'Thank you for your answer.'
+          : 'Merci pour votre précision.';
         this.say({
-          text: `Merci pour votre précision.\n\n${parsed.questionText}`,
+          text: `${thanks}\n\n${parsed.questionText}`,
           options: parsed.options,
         });
         return;
@@ -747,7 +913,7 @@ export class AssistantPage {
     this.typing.set(true);
     const coords = await this.getCoords();
     const call$ = this.sessionId
-      ? this.api.answer(this.sessionId, { answers: this.answers, ...(coords ?? {}) })
+      ? this.api.answer(this.sessionId, { answers: this.answers, language: this.lang(), ...(coords ?? {}) })
       : this.api.start({ symptoms: t, language: this.lang(), ...(coords ?? {}) });
 
     call$.subscribe({
@@ -784,16 +950,24 @@ export class AssistantPage {
   }
 
   private onResult(r: TriageSession): void {
-    // Cas où le modèle LLM demande des précisions
+    // Cas où le modèle LLM demande des précisions de clarification
     if (r.status === 'NEEDS_CLARIFICATION' && r.clarificationQuestions?.length) {
       this.sessionId = r.sessionId;
       this.questions = r.clarificationQuestions;
       this.answers = [];
 
       const parsed = parseQuestionAndOptions(this.questions[0]);
-      const intro = r.preliminaryExplanation
-        ? `${r.preliminaryExplanation}\n\nPour mieux comprendre votre situation : ${parsed.questionText}`
-        : `Pour mieux cerner votre situation et vous orienter au mieux : ${parsed.questionText}`;
+      let intro = '';
+      if (r.preliminaryExplanation) {
+        intro = `${r.preliminaryExplanation}\n\n${parsed.questionText}`;
+      } else {
+        const promptIntro = this.lang() === 'ar'
+          ? 'لتوضيح حالتك وتوجيهك بشكل أفضل : '
+          : this.lang() === 'en'
+          ? 'To better understand your condition and guide you : '
+          : 'Pour mieux cerner votre situation et vous orienter : ';
+        intro = `${promptIntro}${parsed.questionText}`;
+      }
 
       this.say({
         text: intro,
@@ -805,23 +979,27 @@ export class AssistantPage {
     // Résultat final complet
     this.resetSession();
     const a = r.assessment;
+    const consultationRecommended = a?.consultation_recommended ?? true;
     const code = a?.urgency_level ?? 'N3';
     const cfg = this.levelConfig[code] ?? this.levelConfig['N3'];
     const specLabel = SPECIALTIES[a?.recommended_specialty ?? ''] || 'Médecin spécialiste';
-    this.currentSpecialtyLabel.set(specLabel);
+    this.currentSpecialtyLabel.set(r.bookingAllowed ? specLabel : '');
 
     this.say({
       text: a?.patient_explanation || 'Voici l\'évaluation de votre situation selon les symptômes décrits :',
-      level: cfg.level,
-      code,
+      level: consultationRecommended ? cfg.level : undefined,
+      code: consultationRecommended ? code : undefined,
       emergency: r.emergency,
-      conditions: a?.possible_conditions,
-      tips: r.emergency ? r.interimAdvice : (a?.red_flags_detected?.length ? a.red_flags_detected : r.interimAdvice),
+      conditions: consultationRecommended ? a?.possible_conditions : undefined,
+      tips: consultationRecommended
+        ? r.emergency ? r.interimAdvice : (a?.red_flags_detected?.length ? a.red_flags_detected : r.interimAdvice)
+        : undefined,
       specialty: r.bookingAllowed ? specLabel : undefined,
-      doctors: r.emergency ? undefined : r.suggestedDoctors,
+      doctors: r.bookingAllowed && !r.emergency ? r.suggestedDoctors : undefined,
     });
-    // Saisie le médecin recommandé pour le contexte de la conversation.
-    this.currentSpecialtyLabel.set(this.messages().at(-1)?.specialty ?? specLabel);
+
+    this.currentSpecialtyLabel.set(this.messages().at(-1)?.specialty ?? '');
+    this.persistCurrent();
   }
 
   // ───────── Prise de rendez-vous directe ─────────
@@ -897,14 +1075,14 @@ export class AssistantPage {
     this.bookingDoctor.set(null);
 
     // Ajout d'une bulle de confirmation dans le chat
-    const dt = parseLocal(slot);
+    const dayLabel = this.formatDayChip(this.selectedDay());
     this.say({
-      text: `Rendez-vous pris avec succès !`,
+      text: `Rendez-vous confirmé avec ${doc.displayName} le ${dayLabel} à ${slot}.`,
       bookingSuccess: {
         doctorName: doc.displayName,
         specialty: this.currentSpecialtyLabel(),
-        date: dt.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }),
-        time: slot.slice(11),
+        date: dayLabel,
+        time: slot,
       },
     });
   }

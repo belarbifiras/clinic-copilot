@@ -1,0 +1,3 @@
+services:
+  doctor-directory-service:
+    build: ../../doctor-ref/backend/doctor-directory-service

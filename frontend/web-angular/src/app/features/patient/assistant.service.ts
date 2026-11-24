@@ -17,6 +17,7 @@ export interface TriageStartRequest {
 
 export interface TriageAnswerRequest {
   answers: string[];
+  language: TriageLanguage;
   latitude?: number;
   longitude?: number;
 }
@@ -28,6 +29,7 @@ export interface PossibleCondition {
 
 export interface TriageAssessment {
   urgency_level: 'N1' | 'N2' | 'N3' | 'N4' | 'N5';
+  consultation_recommended: boolean;
   confidence: number;
   possible_conditions: PossibleCondition[];
   recommended_specialty: string;

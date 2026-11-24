@@ -14,6 +14,7 @@ public record AiProperties(
         int maxConcurrentRequests,
         int queueWaitSeconds,
         Llm llm,
+        Ollama ollama,
         List<String> allowedSpecialties) {
 
     public record Llm(
@@ -22,5 +23,16 @@ public record AiProperties(
             String model,
             int connectTimeoutSeconds,
             int readTimeoutSeconds) {
+    }
+
+    public record Ollama(
+            String baseUrl,
+            String model,
+            int connectTimeoutSeconds,
+            int readTimeoutSeconds,
+            int numCtx,
+            int numPredict,
+            double temperature,
+            String keepAlive) {
     }
 }

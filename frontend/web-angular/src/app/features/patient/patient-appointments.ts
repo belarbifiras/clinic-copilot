@@ -31,7 +31,9 @@ function backendToFrontendStatus(status: string): AppointmentStatus {
 function mapDtoToPatientAppointment(dto: AppointmentDTO): PatientAppointment {
   return {
     id: String(dto.id),
-    doctorId: `d-${dto.doctorId}`,
+    // Keep the identifier used by the DOCTORS catalogue (real directory ids) so that
+    // booked doctors from the assistant actually appear in the patient space lists.
+    doctorId: String(dto.doctorId),
     start: dto.startTime ? dto.startTime.slice(0, 16) : new Date().toISOString().slice(0, 16),
     durationMin: 30,
     reason: dto.reason || 'Consultation médicale',
@@ -121,7 +123,8 @@ export class PatientAppointments {
   }
 
   getDoctor(id: string): Doctor | undefined {
-    return DOCTORS.find((d) => d.id === id);
+    return DOCTORS.find((d) => d.id === id)
+        ?? DOCTORS.find((d) => d.name.toLowerCase() === id.toLowerCase());
   }
 
   slotsFor(doctorId: string, day: Date, ignoreId?: string): string[] {

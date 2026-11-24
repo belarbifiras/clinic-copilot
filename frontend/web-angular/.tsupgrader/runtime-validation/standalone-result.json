@@ -1,0 +1,113 @@
+{
+  "planHash": "0a49ff6ed0201613aa5738d158ad77033c54181b4b1c16e90298e41bc5a4125b",
+  "phase": "standalone",
+  "recordedAtUtc": "2026-11-24T22:12:16.3178060Z",
+  "retryCount": 0,
+  "resetBaseline": false,
+  "complete": true,
+  "result": {
+    "setupSucceeded": true,
+    "setupDurationMs": 110512,
+    "setupFailureOutput": null,
+    "assertions": [
+      {
+        "name": "production-build",
+        "kind": "process",
+        "verificationMethod": "exit-code",
+        "passed": true,
+        "timedOut": false,
+        "skipped": false,
+        "skippedReason": null,
+        "exitCode": 0,
+        "outputSample": "\r\n\u003E web-angular@0.0.0 build\r\n\u003E ng build\r\n\r\n\u001B[33m\u003E\u001B[39m Building...\r\n\u001B[32m\u221A\u001B[39m Building...\r\n\u001B[1mInitial chunk files\u001B[22m\u001B[2m | \u001B[22m\u001B[1mNames\u001B[22m               \u001B[2m | \u001B[22m \u001B[1mRaw size\u001B[22m\u001B[2m | \u001B[22m\u001B[1mEstimated transfer size\u001B[22m\r\n\u001B[32mchunk-WP4S6SIW.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                   \u001B[2m | \u001B[22m\u001B[36m460.57 kB\u001B[39m\u001B[2m | \u001B[22m               \u001B[36m59.30 kB\u001B[39m\r\n\u001B[32mchunk-LZKKK2GU.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                   \u001B[2m | \u001B[22m \u001B[36m88.45 kB\u001B[39m\u001B[2m | \u001B[22m               \u001B[36m22.39 kB\u001B[39m\r\n\u001B[32mstyles-AO23AYIA.css\u001B[39m\u001B[2m | \u001B[22m\u001B[2mstyles\u001B[22m              \u001B[2m | \u001B[22m \u001B[36m87.42 kB\u001B[39m\u001B[2m | \u001B[22m               \u001B[36m11.15 kB\u001B[39m\r\n\u001B[32mmain-G2CWX5YB.js\u001B[39m   \u001B[2m | \u001B[22m\u001B[2mmain\u001B[22m                \u001B[2m | \u001B[22m \u001B[36m33.41 kB\u001B[39m\u001B[2m | \u001B[22m                \u001B[36m7.66 kB\u001B[39m\r\n\u001B[32mchunk-LKL6I7DC.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                   \u001B[2m | \u001B[22m \u001B[36m18.62 kB\u001B[39m\u001B[2m | \u001B[22m                \u001B[36m5.36 kB\u001B[39m\r\n\u001B[32mchunk-YZPUXVJR.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                   \u001B[2m | \u001B[22m \u001B[36m18.41 kB\u001B[39m\u001B[2m | \u001B[22m                \u001B[36m5.93 kB\u001B[39m\r\n\u001B[32mchunk-H4JWFWLO.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                   \u001B[2m | \u001B[22m  \u001B[36m9.84 kB\u001B[39m\u001B[2m | \u001B[22m                \u001B[36m3.16 kB\u001B[39m\r\n\u001B[32mchunk-DHGTTLPQ.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                   \u001B[2m | \u001B[22m  \u001B[36m2.16 kB\u001B[39m\u001B[2m | \u001B[22m                \u001B[36m1.00 kB\u001B[39m\r\n\u001B[32mchunk-BSFBKYOQ.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                   \u001B[2m | \u001B[22m  \u001B[36m1.76 kB\u001B[39m\u001B[2m | \u001B[22m              \u001B[36m604 bytes\u001B[39m\r\n\u001B[32mchunk-LY44LIGJ.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                   \u001B[2m | \u001B[22m\u001B[36m942 bytes\u001B[39m\u001B[2m | \u001B[22m              \u001B[36m942 bytes\u001B[39m\r\n\u001B[32mchunk-MCT6VM5O.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                   \u001B[2m | \u001B[22m\u001B[36m721 bytes\u001B[39m\u001B[2m | \u001B[22m              \u001B[36m721 bytes\u001B[39m\r\n\u001B[32mchunk-YTRBRMRG.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                   \u001B[2m | \u001B[22m\u001B[36m402 bytes\u001B[39m\u001B[2m | \u001B[22m              \u001B[36m402 bytes\u001B[39m\r\n\u001B[32mchunk-BYXBJQAS.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                   \u001B[2m | \u001B[22m  \u001B[36m0 bytes\u001B[39m\u001B[2m | \u001B[22m                \u001B[36m0 bytes\u001B[39m\r\n\r\n\u001B[1m \u001B[22m                  \u001B[2m | \u001B[22m\u001B[1mInitial total\u001B[22m       \u001B[2m | \u001B[22m\u001B[1m\u001B[93m722.71 kB\u001B[39m\u001B[22m\u001B[2m | \u001B[22m              \u001B[1m118.63 kB\u001B[22m\r\n\r\n\u001B[1mLazy chunk files\u001B[22m   \u001B[2m | \u001B[22m\u001B[1mNames\u001B[22m               \u001B[2m | \u001B[22m \u001B[1mRaw size\u001B[22m\u001B[2m | \u001B[22m\u001B[1mEstimated transfer size\u001B[22m\r\n\u001B[32mchunk-NECD3JZU.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                   \u001B[2m | \u001B[22m \u001B[36m48.01 kB\u001B[39m\u001B[2m | \u001B[22m                \u001B[36m9.54 kB\u001B[39m\r\n\u001B[32mchunk-ETOMC6QD.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2massistant-page\u001B[22m      \u001B[2m | \u001B[22m \u001B[36m39.06 kB\u001B[39m\u001B[2m | \u001B[22m               \u001B[36m10.77 kB\u001B[39m\r\n\u001B[32mchunk-6IVV6MNF.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mappointments-page\u001B[22m   \u001B[2m | \u001B[22m \u001B[36m23.27 kB\u001B[39m\u001B[2m | \u001B[22m                \u001B[36m6.06 kB\u001B[39m\r\n\u001B[32mchunk-3XOML3EZ.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mdoctor-profile-page\u001B[22m \u001B[2m | \u001B[22m \u001B[36m22.66 kB\u001B[39m\u001B[2m | \u001B[22m                \u001B[36m6.96 kB\u001B[39m\r\n\u001B[32mchunk-ZDOJMCZV.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mdoctor-patients-page\u001B[22m\u001B[2m | \u001B[22m \u001B[36m22.12 kB\u001B[39m\u001B[2m | \u001B[22m                \u001B[36m6.44 kB\u001B[39m\r\n\u001B[32mchunk-VP3G5JYA.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mdoctor-agenda-page\u001B[22m  \u001B[2m | \u001B[22m \u001B[36m20.38 kB\u001B[39m\u001B[2m | \u001B[22m                \u001B[36m5.90 kB\u001B[39m\r\n\u001B[32mchunk-FUZ7MO5I.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mmy-profile-page\u001B[22m     \u001B[2m | \u001B[22m \u001B[36m18.87 kB\u001B[39m\u001B[2m | \u001B[22m                \u001B[36m5.26 kB\u001B[39m\r\n\u001B[32mchunk-VIBX6BT6.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mdirectory-page\u001B[22m      \u001B[2m | \u001B[22m \u001B[36m17.61 kB\u001B[39m\u001B[2m | \u001B[22m                \u001B[36m5.30 kB\u001B[39m\r\n\u001B[32mchunk-SHNG5WH6.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mregister-page\u001B[22m       \u001B[2m | \u001B[22m \u001B[36m16.60 kB\u001B[39m\u001B[2m | \u001B[22m                \u001B[36m4.98 kB\u001B[39m\r\n\u001B[32mchunk-YQUU4YPJ.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mmy-diplomas-page\u001B[22m    \u001B[2m | \u001B[22m \u001B[36m15.01 kB\u001B[39m\u001B[2m | \u001B[22m                \u001B[36m4.51 kB\u001B[39m\r\n\u001B[32mchunk-LH3SSMXR.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mdoctors-page\u001B[22m        \u001B[2m | \u001B[22m \u001B[36m14.67 kB\u001B[39m\u001B[2m | \u001B[22m                \u001B[36m4.54 kB\u001B[39m\r\n\u001B[\n\u2026[truncated]",
+        "durationMs": 33479
+      },
+      {
+        "name": "tests-pass",
+        "kind": "process",
+        "verificationMethod": "test-results",
+        "passed": true,
+        "timedOut": false,
+        "skipped": false,
+        "skippedReason": null,
+        "exitCode": 0,
+        "outputSample": "\r\n\u003E web-angular@0.0.0 test\r\n\u003E ng test --watch=false\r\n\r\n\u001B[33m\u003E\u001B[39m Building...\r\n\u001B[32m\u221A\u001B[39m Building...\r\n\u001B[1mInitial chunk files\u001B[22m                            \u001B[2m | \u001B[22m\u001B[1mNames\u001B[22m                                       \u001B[2m | \u001B[22m \u001B[1mRaw size\u001B[22m\r\n\u001B[32mstyles.css\u001B[39m                                     \u001B[2m | \u001B[22m\u001B[2mstyles\u001B[22m                                      \u001B[2m | \u001B[22m\u001B[36m109.89 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-SHTMZ5XJ.js\u001B[39m                              \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                                           \u001B[2m | \u001B[22m  \u001B[36m4.57 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mspec-app-features-patient-assistant-language.js\u001B[39m\u001B[2m | \u001B[22m\u001B[2mspec-app-features-patient-assistant-language\u001B[22m\u001B[2m | \u001B[22m  \u001B[36m3.28 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mspec-app-app.js\u001B[39m                                \u001B[2m | \u001B[22m\u001B[2mspec-app-app\u001B[22m                                \u001B[2m | \u001B[22m  \u001B[36m1.73 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mspec-app-features-patient-patient-storage.js\u001B[39m   \u001B[2m | \u001B[22m\u001B[2mspec-app-features-patient-patient-storage\u001B[22m   \u001B[2m | \u001B[22m  \u001B[36m1.55 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32minit-testbed.js\u001B[39m                                \u001B[2m | \u001B[22m\u001B[2minit-testbed\u001B[22m                                \u001B[2m | \u001B[22m  \u001B[36m1.21 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mvitest-mock-patch.js\u001B[39m                           \u001B[2m | \u001B[22m\u001B[2mvitest-mock-patch\u001B[22m                           \u001B[2m | \u001B[22m\u001B[36m974 bytes\u001B[39m\u001B[2m | \u001B[22m\r\n\r\n\u001B[1m \u001B[22m                                              \u001B[2m | \u001B[22m\u001B[1mInitial total\u001B[22m                               \u001B[2m | \u001B[22m\u001B[1m123.21 kB\u001B[22m\r\n\r\nApplication bundle generation complete. [5.597 seconds] - 2026-11-24T22:11:36.772Z\r\n\r\n\r\n\u001B[1m\u001B[30m\u001B[46m RUN \u001B[49m\u001B[39m\u001B[22m \u001B[36mv4.1.12 \u001B[39m\u001B[90mC:/Users/bejao/Desktop/projet d\u0027integration finale/clinic-copilot/frontend/web-angular\u001B[39m\r\n\r\n\r\n\u001B[2m Test Files \u001B[22m \u001B[1m\u001B[32m3 passed\u001B[39m\u001B[22m\u001B[90m (3)\u001B[39m\r\n\u001B[2m      Tests \u001B[22m \u001B[1m\u001B[32m8 passed\u001B[39m\u001B[22m\u001B[90m (8)\u001B[39m\r\n\u001B[2m   Start at \u001B[22m 23:11:38\r\n\u001B[2m   Duration \u001B[22m 9.94s\u001B[2m (transform 385ms, setup 5.87s, import 334ms, tests 195ms, environment 20.06s)\u001B[22m\r\n\r\n",
+        "durationMs": 25934,
+        "testResults": {
+          "testFramework": "vitest",
+          "runnerDetectedFrom": "package_json",
+          "testsTotal": 8,
+          "testsPassed": 8,
+          "testsFailed": 0,
+          "testsSkipped": 0,
+          "parseFailed": false
+        }
+      },
+      {
+        "name": "development-server-homepage",
+        "kind": "http-probe",
+        "verificationMethod": "http-status",
+        "passed": true,
+        "timedOut": false,
+        "skipped": false,
+        "skippedReason": null,
+        "exitCode": null,
+        "outputSample": "HTTP 200\n\u003C!doctype html\u003E\r\n\u003Chtml lang=\u0022fr\u0022\u003E\r\n\u003Chead\u003E\n  \u003Cscript type=\u0022module\u0022 src=\u0022/@vite/client\u0022\u003E\u003C/script\u003E\n\r\n  \u003Cmeta charset=\u0022utf-8\u0022\u003E\r\n  \u003Ctitle\u003EAssistant IA\u003C/title\u003E\r\n  \u003Cbase href=\u0022/\u0022\u003E\r\n  \u003Cmeta name=\u0022viewport\u0022 content=\u0022width=device-width, initial-scale=1\u0022\u003E\r\n  \u003Clink rel=\u0022icon\u0022 type=\u0022image/x-icon\u0022 href=\u0022favicon.ico\u0022\u003E\r\n\u003Clink rel=\u0022stylesheet\u0022 href=\u0022styles.css\u0022\u003E\u003C/head\u003E\r\n\u003Cbody\u003E\r\n  \u003Capp-root\u003E\u003C/app-root\u003E\r\n\u003Cscript src=\u0022main.js\u0022 type=\u0022module\u0022\u003E\u003C/script\u003E\u003C/body\u003E\r\n\u003C/html\u003E\r\n\n--- server output ---\n\r\n\u003E web-angular@0.0.0 start\r\n\u003E ng serve --port 4300\r\n\r\n\u001B[33m\u003E\u001B[39m Building...\r\n\u001B[32m\u221A\u001B[39m Building...\r\n\u001B[1mInitial chunk files\u001B[22m\u001B[2m | \u001B[22m\u001B[1mNames\u001B[22m               \u001B[2m | \u001B[22m \u001B[1mRaw size\u001B[22m\r\n\u001B[32mstyles.css\u001B[39m         \u001B[2m | \u001B[22m\u001B[2mstyles\u001B[22m              \u001B[2m | \u001B[22m\u001B[36m109.93 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mmain.js\u001B[39m            \u001B[2m | \u001B[22m\u001B[2mmain\u001B[22m                \u001B[2m | \u001B[22m\u001B[36m109.18 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-3YDOWKG6.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                   \u001B[2m | \u001B[22m \u001B[36m26.39 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-3M4RED4K.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                   \u001B[2m | \u001B[22m  \u001B[36m3.92 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-VIXSQMDE.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                   \u001B[2m | \u001B[22m  \u001B[36m3.45 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-PRZZ742I.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                   \u001B[2m | \u001B[22m  \u001B[36m3.39 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-BHEAVSSC.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                   \u001B[2m | \u001B[22m  \u001B[36m2.05 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-ZTCBPC62.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                   \u001B[2m | \u001B[22m\u001B[36m717 bytes\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-QUTHUM7X.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                   \u001B[2m | \u001B[22m\u001B[36m124 bytes\u001B[39m\u001B[2m | \u001B[22m\r\n\r\n\u001B[1m \u001B[22m                  \u001B[2m | \u001B[22m\u001B[1mInitial total\u001B[22m       \u001B[2m | \u001B[22m\u001B[1m259.16 kB\u001B[22m\r\n\r\n\u001B[1mLazy chunk files\u001B[22m   \u001B[2m | \u001B[22m\u001B[1mNames\u001B[22m               \u001B[2m | \u001B[22m \u001B[1mRaw size\u001B[22m\r\n\u001B[32mchunk-QCYD35GT.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2massistant-page\u001B[22m      \u001B[2m | \u001B[22m\u001B[36m104.75 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-L2PRYTV4.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mappointments-page\u001B[22m   \u001B[2m | \u001B[22m \u001B[36m74.24 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-KSDZYWAB.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mdoctor-profile-page\u001B[22m \u001B[2m | \u001B[22m \u001B[36m67.48 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-QAB5K35P.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mdoctor-patients-page\u001B[22m\u001B[2m | \u001B[22m \u001B[36m67.46 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-OYQ7HIL4.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mdoctor-agenda-page\u001B[22m  \u001B[2m | \u001B[22m \u001B[36m61.14 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-K36KSOF7.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mmy-profile-page\u001B[22m     \u001B[2m | \u001B[22m \u001B[36m55.00 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-BFX6AYAB.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mdirectory-page\u001B[22m      \u001B[2m | \u001B[22m \u001B[36m54.64 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-F34FBPFY.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mregister-page\u001B[22m       \u001B[2m | \u001B[22m \u001B[36m47.46 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-7GKC2NSX.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mmy-diplomas-page\u001B[22m    \u001B[2m | \u001B[22m \u001B[36m46.46 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-ZZS5FV2G.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mdoctors-page\u001B[22m        \u001B[2m | \u001B[22m \u001B[36m44.42 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-SHVCM543.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mdoctor-detail-page\u001B[22m  \u001B[2m | \u001B[22m \u001B[36m37.27 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-UIIRPRGH.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mdoctor-messages-page\u001B[22m\u001B[2m | \u001B[22m \u001B[36m35.37 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-MRGTLPKP.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2madmin-reviews-page\u001B[22m  \u001B[2m | \u001B[22m \u001B[36m34.95 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-I33XMRBT.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2m-\u001B[22m                   \u001B[2m | \u001B[22m \u001B[36m34.58 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[32mchunk-PVEMM45M.js\u001B[39m  \u001B[2m | \u001B[22m\u001B[2mpatient-profile-page\u001B[22m\u001B[2m | \u001B[22m \u001B[36m33.27 kB\u001B[39m\u001B[2m | \u001B[22m\r\n\u001B[2m...and 41 more lazy chunks files. Use \u0022--verbose\u0022 to show all the files.\u001B[22m\r\n\r\nApplication bundle generation complete. [18.014 seconds] - 2026-11-24T22:12:15.080Z\r\n\r\nWatch mode enabled. Watching for file changes...\r\nNOTE: Raw file sizes do not reflect development server per-request transformations.\r\n\u001B[2m11:12:15 PM\u001B[22m \u001B[36m\u001B[1m[vite]\u001B[22m\u001B[39m \u001B[90m\u001B[2m(client)\u001B[22m\u001B[39m Re-optimizing dependencies because lockfile has changed\r\n \n\u2026[truncated]",
+        "durationMs": 27458
+      }
+    ],
+    "executions": [
+      {
+        "source": "setup[0]",
+        "resolvedExecutable": "C:\\Program Files\\nodejs\\npm.CMD",
+        "args": [
+          "ci"
+        ],
+        "cwd": "C:\\Users\\bejao\\Desktop\\projet d\u0027integration finale\\clinic-copilot\\frontend\\web-angular",
+        "env": {},
+        "prependPath": [],
+        "platform": "win32"
+      },
+      {
+        "source": "production-build",
+        "resolvedExecutable": "C:\\Program Files\\nodejs\\npm.CMD",
+        "args": [
+          "run",
+          "build"
+        ],
+        "cwd": "C:\\Users\\bejao\\Desktop\\projet d\u0027integration finale\\clinic-copilot\\frontend\\web-angular",
+        "env": {},
+        "prependPath": [],
+        "platform": "win32"
+      },
+      {
+        "source": "tests-pass",
+        "resolvedExecutable": "C:\\Program Files\\nodejs\\npm.CMD",
+        "args": [
+          "test",
+          "--",
+          "--watch=false"
+        ],
+        "cwd": "C:\\Users\\bejao\\Desktop\\projet d\u0027integration finale\\clinic-copilot\\frontend\\web-angular",
+        "env": {},
+        "prependPath": [],
+        "platform": "win32"
+      },
+      {
+        "source": "development-server-homepage",
+        "resolvedExecutable": "C:\\Program Files\\nodejs\\npm.CMD",
+        "args": [
+          "run",
+          "start",
+          "--",
+          "--port",
+          "4300"
+        ],
+        "cwd": "C:\\Users\\bejao\\Desktop\\projet d\u0027integration finale\\clinic-copilot\\frontend\\web-angular",
+        "env": {},
+        "prependPath": [],
+        "platform": "win32"
+      }
+    ]
+  }
+}

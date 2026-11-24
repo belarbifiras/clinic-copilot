@@ -12,19 +12,28 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-/** Validation des jetons Keycloak, comme les autres services. Plus aucun mode "permit-all". */
+/**
+ * Validation des jetons Keycloak, comme les autres services.
+ * Mode "permit-all" (par défaut : APP_SECURITY_PERMIT_ALL=true) pour tester l'assistant sans session ;
+ * désactivé (false), on repasse en validation des jetons Keycloak (votre partie).
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain filterChain(HttpSecurity http,
+                                     @Value("${app.security.permit-all:false}") boolean permitAll) throws Exception {
         http.csrf(csrf -> csrf.disable())
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(a -> a
-                        .requestMatchers("/actuator/health/**").permitAll()
-                        .anyRequest().authenticated())
-                .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(new KeycloakRoleConverter())));
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        if (permitAll) {
+            http.authorizeHttpRequests(a -> a.anyRequest().permitAll());
+        } else {
+            http.authorizeHttpRequests(a -> a
+                            .requestMatchers("/actuator/health/**").permitAll()
+                            .anyRequest().authenticated())
+                    .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(new KeycloakRoleConverter())));
+        }
         return http.build();
     }
 

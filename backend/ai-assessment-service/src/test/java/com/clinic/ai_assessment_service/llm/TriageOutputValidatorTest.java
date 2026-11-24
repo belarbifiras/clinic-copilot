@@ -15,6 +15,11 @@ class TriageOutputValidatorTest {
             new TriageOutputValidator(List.of("general_medicine", "cardiology", "ent"));
 
     private static String json(String urgency, String confidence, String specialty, String explanation, String extra) {
+        return json(urgency, confidence, specialty, explanation, true, extra);
+    }
+
+    private static String json(String urgency, String confidence, String specialty, String explanation,
+                               boolean consultationRecommended, String extra) {
         return """
                 {
                   "urgency_level": "%s",
@@ -24,9 +29,10 @@ class TriageOutputValidatorTest {
                   "red_flags_detected": [],
                   "patient_explanation": "%s",
                   "doctor_summary": "Sore throat for 3 days, mild fever.",
-                  "followup_questions": []%s
+                  "followup_questions": [],
+                  "consultation_recommended": %s%s
                 }
-                """.formatted(urgency, confidence, specialty, explanation, extra);
+                """.formatted(urgency, confidence, specialty, explanation, consultationRecommended, extra);
     }
 
     @Test
@@ -35,6 +41,7 @@ class TriageOutputValidatorTest {
                 json("N4", "0.8", "ent", "Ceci est une orientation, pas un diagnostic.", ""));
         assertEquals(UrgencyLevel.N4, a.urgencyLevel());
         assertEquals("ent", a.recommendedSpecialty());
+        assertEquals(true, a.requiresConsultation());
     }
 
     @Test
@@ -76,5 +83,20 @@ class TriageOutputValidatorTest {
     void rejectsDrugName() {
         assertThrows(InvalidModelOutputException.class,
                 () -> validator.parseAndValidate(json("N4", "0.8", "ent", "Vous pouvez prendre du paracétamol", "")));
+    }
+
+    @Test
+    void acceptsGeneralMedicationInformationWhenPatientAskedAboutIt() throws Exception {
+        TriageAssessment a = validator.parseAndValidate(
+                json("N5", "0.9", "general_medicine", "Le Doliprane peut soulager la fièvre.", false, ""), true);
+
+        assertEquals(false, a.requiresConsultation());
+    }
+
+    @Test
+    void stillRejectsMedicationDosagesForGeneralInformation() {
+        assertThrows(InvalidModelOutputException.class, () -> validator.parseAndValidate(
+                json("N5", "0.9", "general_medicine", "Le Doliprane peut soulager la fièvre à 500 mg.", false, ""),
+                true));
     }
 }

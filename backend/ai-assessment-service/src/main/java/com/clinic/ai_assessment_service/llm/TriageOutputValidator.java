@@ -19,8 +19,7 @@ import java.util.regex.Pattern;
 
 /**
  * Validation STRICTE de la sortie du LLM côté backend (le schéma envoyé à Ollama ne suffit pas).
- * Rejette : JSON invalide, champs manquants ou en trop, valeurs hors bornes, spécialité inconnue,
- * et toute mention de dosage / médicament (le système ne prescrit jamais).
+ * Rejette les sorties invalides, toute posologie et les médicaments non demandés explicitement.
  * En cas de rejet, l'appelant applique le repli : médecine générale, N3, alerte administrateur.
  */
 @Component
@@ -28,7 +27,8 @@ public class TriageOutputValidator {
 
     private static final Set<String> ALLOWED_FIELDS = Set.of(
             "urgency_level", "confidence", "possible_conditions", "recommended_specialty",
-            "red_flags_detected", "patient_explanation", "doctor_summary", "followup_questions");
+            "red_flags_detected", "patient_explanation", "doctor_summary", "followup_questions",
+            "consultation_recommended");
 
     private static final Pattern DOSAGE =
             Pattern.compile("(?i)(?<![\\p{L}\\d])\\d+(?:[.,]\\d+)?\\s?(?:mg|mcg|ml|g|ui|iu)(?![\\p{L}\\d])");
@@ -51,6 +51,10 @@ public class TriageOutputValidator {
     }
 
     public TriageAssessment parseAndValidate(String json) throws InvalidModelOutputException {
+        return parseAndValidate(json, false);
+    }
+
+    TriageAssessment parseAndValidate(String json, boolean medicationQuestion) throws InvalidModelOutputException {
         JsonNode root;
         try {
             root = Json.MAPPER.readTree(json);
@@ -93,22 +97,29 @@ public class TriageOutputValidator {
         String patientExplanation = text(root, "patient_explanation", 1, 1500);
         String doctorSummary = text(root, "doctor_summary", 1, 1500);
         List<String> followups = stringList(root, "followup_questions", 5, 300);
+        boolean consultationRecommended = bool(root, "consultation_recommended");
 
         StringBuilder all = new StringBuilder(patientExplanation).append(' ').append(doctorSummary);
         conditions.forEach(c -> all.append(' ').append(c.label()));
         followups.forEach(f -> all.append(' ').append(f));
-        if (containsMedication(all.toString())) {
+        if (containsDosage(all.toString()) || (!medicationQuestion && containsDrugName(all.toString()))) {
             throw new InvalidModelOutputException("medication_or_dosage_mentioned");
         }
 
         return new TriageAssessment(level, confidence, List.copyOf(conditions), specialty,
-                List.copyOf(redFlags), patientExplanation, doctorSummary, List.copyOf(followups));
+                List.copyOf(redFlags), patientExplanation, doctorSummary, List.copyOf(followups),
+                consultationRecommended);
     }
 
     static boolean containsMedication(String text) {
-        if (DOSAGE.matcher(text).find()) {
-            return true;
-        }
+        return containsDosage(text) || containsDrugName(text);
+    }
+
+    static boolean containsDosage(String text) {
+        return DOSAGE.matcher(text).find();
+    }
+
+    static boolean containsDrugName(String text) {
         String normalized = TextNormalizer.normalize(text);
         for (String drug : DRUG_NAMES) {
             if (normalized.contains(TextNormalizer.normalize(drug))) {
@@ -116,6 +127,14 @@ public class TriageOutputValidator {
             }
         }
         return false;
+    }
+
+    private static boolean bool(JsonNode node, String field) throws InvalidModelOutputException {
+        JsonNode value = node.get(field);
+        if (value == null || !value.isBoolean()) {
+            throw new InvalidModelOutputException("missing_or_not_boolean:" + field);
+        }
+        return value.booleanValue();
     }
 
     private static String text(JsonNode node, String field, int min, int max) throws InvalidModelOutputException {

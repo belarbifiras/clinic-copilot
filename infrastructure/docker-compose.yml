@@ -202,7 +202,6 @@ services:
     build: ../backend/ai-assessment-service
     image: ${DOCKERHUB_USER:-clinic}/clinic-ai-assessment-service:1.0
     environment:
-      DOCTOR_DIRECTORY_URL: http://doctor-directory-service:8082
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_URL: jdbc:postgresql://postgres:5432/clinic_ai
@@ -212,7 +211,7 @@ services:
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/clinic/protocol/openid-connect/certs
       LLM_BASE_URL: ${LLM_BASE_URL}
       LLM_API_KEY: ${LLM_API_KEY}
-      AI_MODEL: ${AI_MODEL:-Qwen/Qwen3-8B}
+      AI_MODEL: ${AI_MODEL:-google/medgemma-4b-it}
 
   medical-records-service:
     <<: *spring-common

@@ -15,7 +15,7 @@ class PrecautionPolicyTest {
 
     private static TriageAssessment assessment(UrgencyLevel level, double confidence, List<String> redFlags) {
         return new TriageAssessment(level, confidence, List.of(), "general_medicine",
-                redFlags, "explication", "résumé", List.of());
+                redFlags, "explication", "résumé", List.of(), true);
     }
 
     @Test

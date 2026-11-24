@@ -24,7 +24,7 @@ import java.util.Locale;
 public class DirectoryClient {
 
     private static final Logger log = LoggerFactory.getLogger(DirectoryClient.class);
-    private static final int MAX_RESULTS = 3;
+    private static final int MAX_RESULTS = 4;
 
     private final RestClient client;
 
@@ -43,19 +43,23 @@ public class DirectoryClient {
     }
 
     /** specialtyCode : code de l'annuaire (l'annuaire le met lui-même en majuscules, ex. DERMATOLOGY). */
-    public List<DoctorSuggestion> nearest(String specialtyCode, double lat, double lng) {
+    public List<DoctorSuggestion> nearest(String specialtyCode, Double lat, Double lng) {
         if (client == null || specialtyCode == null || specialtyCode.isBlank()) {
             return List.of();
         }
         try {
             String body = client.get()
-                    .uri(u -> u.path("/api/directory/doctors")
-                            .queryParam("specialty", specialtyCode.toUpperCase(Locale.ROOT))
-                            .queryParam("lat", lat)
-                            .queryParam("lng", lng)
-                            .queryParam("sort", "distance")
-                            .queryParam("size", MAX_RESULTS)
-                            .build())
+                    .uri(u -> {
+                        var b = u.path("/api/directory/doctors")
+                                .queryParam("specialty", specialtyCode.toUpperCase(Locale.ROOT))
+                                .queryParam("size", MAX_RESULTS);
+                        if (lat != null && lng != null) {
+                            b.queryParam("lat", lat)
+                             .queryParam("lng", lng)
+                             .queryParam("sort", "distance");
+                        }
+                        return b.build();
+                    })
                     .retrieve()
                     .body(String.class);
             if (body == null) {

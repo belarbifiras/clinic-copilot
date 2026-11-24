@@ -12,8 +12,8 @@ import java.util.UUID;
  * status=NEEDS_CLARIFICATION -> clarificationQuestions + preliminaryExplanation (explication provisoire, sans niveau).
  * emergency=true   -> le frontend affiche l'écran d'urgence et l'action d'appel (numéro local issu d'une configuration validée).
  * interimAdvice    -> consignes d'attente (textes FIXES, brouillon à valider par un médecin), seulement en N1.
- * bookingAllowed   -> false pour N1 (pas de réservation en ligne).
- * suggestedDoctors -> médecins les plus proches (annuaire), seulement si la position a été fournie et hors N1.
+ * bookingAllowed   -> true seulement si une consultation a été recommandée et que le niveau n'est pas N1.
+ * suggestedDoctors -> médecins les plus proches, uniquement pour une consultation recommandée.
  * disclaimer       -> à afficher AVANT et APRÈS le résultat.
  */
 public record TriageSessionResponse(

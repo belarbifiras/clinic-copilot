@@ -41,6 +41,9 @@ public class LlmClient {
 
     public OllamaReply chat(String systemPrompt, String userPrompt, ObjectNode schema)
             throws OllamaUnavailableException {
+        if (props.llm().baseUrl() == null || props.llm().baseUrl().isBlank()) {
+            throw new OllamaUnavailableException("llm_base_url_not_configured", null);
+        }
         ObjectNode body = Json.MAPPER.createObjectNode();
         body.put("system", systemPrompt);
         body.put("user", userPrompt);

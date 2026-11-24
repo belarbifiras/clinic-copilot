@@ -42,6 +42,14 @@ final class Messages {
             "ar", "تعذّر تحليل أعراضك آليًا. ننصحك بزيارة طبيب عام خلال 72 ساعة. وإذا ساءت حالتك أو ظهرت أعراض شديدة "
                     + "فاتصل بخدمات الطوارئ فورًا.");
 
+    private static final Map<String, String> FALLBACK_COLAB_OFFLINE = Map.of(
+            "fr", "Le serveur d'intelligence médicale MedGemma (Google Colab) est actuellement inaccessible ou déconnecté. "
+                    + "Veuillez vérifier que votre session Google Colab est bien démarrée et que l'URL Ngrok est à jour.",
+            "en", "The MedGemma AI server (Google Colab) is currently unreachable. "
+                    + "Please check that your Google Colab session is running and the Ngrok URL is up to date.",
+            "ar", "تعذّر الاتصال بخادم الذكاء الاصطناعي MedGemma (Google Colab). "
+                    + "يرجى التأكد من تشغيل جلسة Google Colab وأن رابط Ngrok محدّث.");
+
     static String disclaimer(String lang) {
         return DISCLAIMER.getOrDefault(lang, DISCLAIMER.get("en"));
     }
@@ -51,15 +59,21 @@ final class Messages {
                 UrgencyLevel.N1, 1.0, List.<PossibleCondition>of(), "emergency",
                 ruleIds, EMERGENCY.getOrDefault(lang, EMERGENCY.get("en")),
                 "Emergency rule(s) triggered: " + String.join(", ", ruleIds) + ". No LLM was used. Immediate emergency care advised.",
-                List.of());
+                List.of(), true);
     }
 
     static TriageAssessment fallback(String lang, String reason) {
+        String explanation;
+        if ("OLLAMA_UNAVAILABLE".equals(reason) || "COLAB_UNAVAILABLE".equals(reason) || "BUSY".equals(reason)) {
+            explanation = FALLBACK_COLAB_OFFLINE.getOrDefault(lang, FALLBACK_COLAB_OFFLINE.get("en"));
+        } else {
+            explanation = FALLBACK.getOrDefault(lang, FALLBACK.get("en"));
+        }
         return new TriageAssessment(
                 UrgencyLevel.N3, 0.0, List.<PossibleCondition>of(), "general_medicine",
-                List.of(), FALLBACK.getOrDefault(lang, FALLBACK.get("en")),
-                "FALLBACK (" + reason + "): automatic analysis unavailable. General medicine, semi-urgent (N3) by precaution. Manual review recommended.",
-                List.of());
+                List.of(), explanation,
+                "FALLBACK (" + reason + "): MedGemma Colab server unavailable. General medicine, semi-urgent (N3) by precaution.",
+                List.of("Vérifiez l'état de la session Google Colab et du tunnel Ngrok."), true);
     }
 
     // ------------------------------------------------------------------------------------------

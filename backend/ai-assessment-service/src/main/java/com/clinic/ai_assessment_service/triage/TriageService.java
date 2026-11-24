@@ -98,6 +98,9 @@ public class TriageService {
         if (req.answers().size() != questions.size()) {
             throw new IllegalArgumentException("Le nombre de réponses doit être égal au nombre de questions.");
         }
+        if (req.language() != null) {
+            s.language = req.language();
+        }
         List<String> answers = req.answers().stream().map(a -> Pseudonymizer.scrub(a).strip()).toList();
         s.clarificationAnswersJson = Json.write(answers);
 
@@ -209,7 +212,7 @@ public class TriageService {
         TriageAssessment a = completed ? stored : null;
         String preliminary = !completed && stored != null ? stored.patientExplanation() : null;
         boolean emergency = a != null && a.urgencyLevel() == UrgencyLevel.N1;
-        boolean booking = a != null && !emergency;
+        boolean booking = a != null && !emergency && a.requiresConsultation();
         List<String> questions = s.status == SessionStatus.NEEDS_CLARIFICATION
                 ? Json.readStringList(s.clarificationQuestionsJson)
                 : List.of();
@@ -218,8 +221,8 @@ public class TriageService {
                 ? Messages.interimAdvice(s.language,
                         s.source == TriageSource.RULES ? a.redFlagsDetected() : List.of())
                 : List.of();
-        // Médecins proches : jamais en N1, seulement si le patient a fourni sa position. Non conservée.
-        List<DoctorSuggestion> doctors = booking && lat != null && lng != null
+        // Médecins recommandés : jamais en N1 (urgence vitale). Triés par distance si position fournie, sinon meilleurs médecins vérifiés.
+        List<DoctorSuggestion> doctors = booking
                 ? directory.nearest(a.recommendedSpecialty(), lat, lng)
                 : List.of();
         return new TriageSessionResponse(

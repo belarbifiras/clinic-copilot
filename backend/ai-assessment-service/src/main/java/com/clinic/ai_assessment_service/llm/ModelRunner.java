@@ -54,7 +54,9 @@ public class ModelRunner {
             }
             OllamaReply reply = ollama.chat(
                     prompts.systemPrompt(ctx.language(), finalRound), prompts.userPrompt(ctx), schema);
-            TriageAssessment parsed = validator.parseAndValidate(reply.content());
+            String patientText = ctx.symptoms() + " " + String.join(" ", ctx.answers());
+            boolean medicationQuestion = TriageOutputValidator.containsDrugName(patientText);
+            TriageAssessment parsed = validator.parseAndValidate(reply.content(), medicationQuestion);
             PrecautionPolicy.PolicyResult pr = policy.apply(parsed);
             return ModelOutcome.ok(pr.assessment(), reply.model(), ollama.modelDigest(), pr.adjustments());
         } catch (OllamaUnavailableException e) {
