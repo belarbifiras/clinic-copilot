@@ -117,9 +117,11 @@ fun ProfileScreen(
         bottomBar = {
             HomeBottomBar(
                 selected = "Profil",
+                onAccueil = onAccueil,
                 onMessages = onMessages,
                 onMedecins = onMedecins,
                 onRdv = onRdv,
+                onProfil = {},
             )
         },
     ) { innerPadding ->

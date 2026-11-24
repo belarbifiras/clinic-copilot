@@ -81,6 +81,7 @@ fun HomeScreen(
     onAllerMessages: () -> Unit = {},
     onAllerMedecins: () -> Unit = {},
     onAllerRdv: () -> Unit = {},
+    onAllerProfil: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -117,7 +118,16 @@ fun HomeScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = ChatColors.cardSurface),
             )
         },
-        bottomBar = { HomeBottomBar(selected = "Accueil", onMessages = onAllerMessages, onMedecins = onAllerMedecins, onRdv = onAllerRdv) },
+        bottomBar = {
+            HomeBottomBar(
+                selected = "Accueil",
+                onAccueil = {},
+                onMessages = onAllerMessages,
+                onMedecins = onAllerMedecins,
+                onRdv = onAllerRdv,
+                onProfil = onAllerProfil,
+            )
+        },
     ) { innerPadding ->
         if (uiState.isLoading) {
             Box(Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
@@ -447,17 +457,19 @@ private fun MedicamentsSection(meds: List<MedicamentJour>, onValider: (String) -
 @Composable
 fun HomeBottomBar(
     selected: String,
+    onAccueil: () -> Unit = {},
     onMessages: () -> Unit = {},
     onMedecins: () -> Unit = {},
     onRdv: () -> Unit = {},
+    onProfil: () -> Unit = {},
 ) {
     val forme = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
     val elements = listOf(
-        Triple("Accueil", Icons.Default.Home, {}),
+        Triple("Accueil", Icons.Default.Home, onAccueil),
         Triple("Médecins", Icons.Default.People, onMedecins),
         Triple("RDV", Icons.Default.CalendarToday, onRdv),
         Triple("Messages", Icons.Default.ChatBubble, onMessages),
-        Triple("Profil", Icons.Default.Person, {}),
+        Triple("Profil", Icons.Default.Person, onProfil),
     )
     Surface(
         modifier = Modifier
