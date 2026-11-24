@@ -194,10 +194,50 @@ fun LoginScreen(
                     text = uiState.errorMessage!!,
                     color = ChatColors.urgenceCritique,
                     fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp),
                 )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            // ── Raccourcis de test Démo ───────────────────────────────────────
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFEAF5FF))
+                        .clickable {
+                            email = "patient@demo.fr"
+                            motDePasse = "demo1234"
+                            viewModel.effacerErreur()
+                        }
+                        .padding(vertical = 8.dp, horizontal = 6.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("Compte Démo : Thomas", fontSize = 11.sp, color = ChatColors.primaryBlue, fontWeight = FontWeight.SemiBold)
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFF0FDF4))
+                        .clickable {
+                            email = "sophie.laurent@sante.fr"
+                            motDePasse = "password"
+                            viewModel.effacerErreur()
+                        }
+                        .padding(vertical = 8.dp, horizontal = 6.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("Compte Démo : Dr. Laurent", fontSize = 11.sp, color = Color(0xFF16A34A), fontWeight = FontWeight.SemiBold)
+                }
             }
 
             Spacer(Modifier.height(16.dp))

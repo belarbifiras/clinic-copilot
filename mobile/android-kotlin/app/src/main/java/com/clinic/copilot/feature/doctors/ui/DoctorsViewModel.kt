@@ -2,15 +2,16 @@ package com.clinic.copilot.feature.doctors.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clinic.copilot.core.data.ClinicLocalDatabase
 import com.clinic.copilot.feature.doctors.domain.Doctor
 import com.clinic.copilot.feature.doctors.domain.FiltreMedecin
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class DoctorsUiState(
     val doctors: List<Doctor> = emptyList(),
@@ -18,91 +19,119 @@ data class DoctorsUiState(
     val searchQuery: String = "",
     val activeFilter: FiltreMedecin = FiltreMedecin.TOUS,
     val showAiBanner: Boolean = true,
+    val isMapView: Boolean = false,
+    val selectedDoctorForDetail: Doctor? = null,
+    val selectedDoctorForBooking: Doctor? = null,
+    val bookingSuccessMessage: String? = null,
+    val doctorEpingleCarte: Doctor? = null,
 )
 
 /**
- * ViewModel de l'annuaire des médecins – Membre 3 (Sprint 6, US-20).
+ * ViewModel de l'annuaire des médecins – Connecté à [ClinicLocalDatabase] (US-20, US-21, US-22, US-31).
  */
 @HiltViewModel
-class DoctorsViewModel @Inject constructor() : ViewModel() {
+class DoctorsViewModel @Inject constructor(
+    private val database: ClinicLocalDatabase,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DoctorsUiState())
     val uiState: StateFlow<DoctorsUiState> = _uiState.asStateFlow()
 
     init {
-        chargerMedecins()
-    }
-
-    private fun chargerMedecins() {
-        val liste = listOf(
-            Doctor(
-                id = "doc-1",
-                nomComplet = "Dr. Éléonore Garnier",
-                specialite = "Médecin Généraliste",
-                secteur = "Secteur 1",
-                note = 4.9,
-                nombreAvis = 132,
-                adresse = "Paris 15e",
-                distanceKm = 1.2,
-                disponibleAujourdhui = true,
-                teleconsultation = true,
-                prochainsCreneaux = listOf("14:30", "15:00", "16:30"),
-            ),
-            Doctor(
-                id = "doc-2",
-                nomComplet = "Dr. Marc Laurent",
-                specialite = "Cardiologie préventive",
-                secteur = "Secteur 1",
-                note = 4.8,
-                nombreAvis = 98,
-                adresse = "Paris 14e",
-                distanceKm = 2.4,
-                disponibleAujourdhui = false,
-                teleconsultation = true,
-                prochainsCreneaux = listOf("Demain 14:30"),
-            ),
-            Doctor(
-                id = "doc-3",
-                nomComplet = "Dr. Thomas Bernard",
-                specialite = "Neurologie",
-                secteur = "Secteur 2",
-                note = 4.9,
-                nombreAvis = 85,
-                adresse = "Paris 6e",
-                distanceKm = 3.1,
-                disponibleAujourdhui = true,
-                teleconsultation = false,
-                prochainsCreneaux = listOf("11:00", "15:30"),
-            ),
-            Doctor(
-                id = "doc-4",
-                nomComplet = "Dr. Nadia Benali",
-                specialite = "Dermatologie",
-                secteur = "Secteur 1",
-                note = 4.7,
-                nombreAvis = 64,
-                adresse = "Boulogne-Billancourt",
-                distanceKm = 4.5,
-                disponibleAujourdhui = false,
-                teleconsultation = true,
-                prochainsCreneaux = listOf("Jeudi 09:30"),
-            ),
-        )
-        _uiState.update { it.copy(doctors = liste, filteredDoctors = liste) }
+        viewModelScope.launch {
+            database.doctors.collect { liste ->
+                _uiState.update { state ->
+                    val filtered = filtrer(liste, state.searchQuery, state.activeFilter)
+                    state.copy(
+                        doctors = liste,
+                        filteredDoctors = filtered,
+                        doctorEpingleCarte = state.doctorEpingleCarte ?: filtered.firstOrNull(),
+                    )
+                }
+            }
+        }
     }
 
     fun onSearchQueryChange(query: String) {
         _uiState.update { state ->
             val filtered = filtrer(state.doctors, query, state.activeFilter)
-            state.copy(searchQuery = query, filteredDoctors = filtered)
+            state.copy(
+                searchQuery = query,
+                filteredDoctors = filtered,
+                doctorEpingleCarte = filtered.firstOrNull(),
+            )
         }
+    }
+
+    fun filtrerParSpecialite(specialite: String?) {
+        if (specialite.isNullOrBlank()) return
+        onSearchQueryChange(specialite)
     }
 
     fun onFilterSelect(filter: FiltreMedecin) {
         _uiState.update { state ->
             val filtered = filtrer(state.doctors, state.searchQuery, filter)
-            state.copy(activeFilter = filter, filteredDoctors = filtered)
+            state.copy(
+                activeFilter = filter,
+                filteredDoctors = filtered,
+                doctorEpingleCarte = filtered.firstOrNull(),
+            )
         }
+    }
+
+    fun toggleMapView() {
+        _uiState.update { it.copy(isMapView = !it.isMapView) }
+    }
+
+    fun selectionnerMedecinCarte(doctor: Doctor) {
+        _uiState.update { it.copy(doctorEpingleCarte = doctor) }
+    }
+
+    fun ouvrirFicheMedecin(doctor: Doctor) {
+        _uiState.update { it.copy(selectedDoctorForDetail = doctor) }
+    }
+
+    fun fermerFicheMedecin() {
+        _uiState.update { it.copy(selectedDoctorForDetail = null) }
+    }
+
+    fun ouvrirReservation(doctor: Doctor) {
+        _uiState.update {
+            it.copy(
+                selectedDoctorForBooking = doctor,
+                selectedDoctorForDetail = null, // Ferme la fiche si ouverte
+            )
+        }
+    }
+
+    fun fermerReservation() {
+        _uiState.update { it.copy(selectedDoctorForBooking = null) }
+    }
+
+    fun confirmerReservation(
+        doctor: Doctor,
+        dateTexte: String,
+        heure: String,
+        motif: String,
+        teleconsultation: Boolean = false,
+    ) {
+        database.reserverRdv(
+            doctor = doctor,
+            dateTexte = dateTexte,
+            heure = heure,
+            motif = motif,
+            teleconsultation = teleconsultation,
+        )
+        _uiState.update {
+            it.copy(
+                selectedDoctorForBooking = null,
+                bookingSuccessMessage = "Rendez-vous confirmé avec ${doctor.nomComplet} le $dateTexte à $heure !",
+            )
+        }
+    }
+
+    fun effacerMessageSucces() {
+        _uiState.update { it.copy(bookingSuccessMessage = null) }
     }
 
     fun dismissAiBanner() {

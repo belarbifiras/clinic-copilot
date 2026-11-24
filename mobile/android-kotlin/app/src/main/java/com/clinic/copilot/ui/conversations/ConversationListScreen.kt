@@ -97,11 +97,14 @@ import com.clinic.copilot.ui.theme.ChatTypography
  * @param onConversationClick Callback invoqué avec la conversation choisie (identifiant et nom).
  * @param viewModel ViewModel injecté par Hilt, remplaçable dans les tests Compose.
  */
-// TODO: ajouter la navigation retour vers l'accueil global une fois la navigation par rôle de l'équipe (US-05) branchée
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConversationListScreen(
     onConversationClick: (Conversation) -> Unit,
+    onAccueil: () -> Unit = {},
+    onMedecins: () -> Unit = {},
+    onRdv: () -> Unit = {},
+    onProfil: () -> Unit = {},
     viewModel: ConversationListViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -204,7 +207,16 @@ fun ConversationListScreen(
                 ),
             )
         },
-        bottomBar = { BottomNavigationBar() },
+        bottomBar = {
+            com.clinic.copilot.feature.home.ui.HomeBottomBar(
+                selected = "Messages",
+                onAccueil = onAccueil,
+                onMessages = {},
+                onMedecins = onMedecins,
+                onRdv = onRdv,
+                onProfil = onProfil,
+            )
+        },
     ) { contentPadding ->
         LazyColumn(
             modifier = Modifier

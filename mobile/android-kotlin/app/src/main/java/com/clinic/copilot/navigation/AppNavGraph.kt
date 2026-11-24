@@ -78,13 +78,18 @@ fun AppNavGraph(modifier: Modifier = Modifier) {
 
         // ── 3. Triage IA (Membre 2) ───────────────────────────────────────
         composable(AppRoutes.TRIAGE) {
-            TriageScreen(onRetour = { navController.popBackStack() })
+            TriageScreen(
+                onRetour = { navController.popBackStack() },
+                onAllerAnnuaire = { specialite ->
+                    navController.navigate(AppRoutes.DOCTORS)
+                },
+            )
         }
 
         // ── 4. Annuaire Médecins (Membre 3) ───────────────────────────────
         composable(AppRoutes.DOCTORS) {
             DoctorsScreen(
-                onDoctorClick = { doc ->
+                onDoctorMessageClick = { doc ->
                     navController.navigate(
                         AppRoutes.chat(
                             conversationId = "conv-${doc.id}",
@@ -122,6 +127,10 @@ fun AppNavGraph(modifier: Modifier = Modifier) {
                         ),
                     )
                 },
+                onAccueil = { navController.navigate(AppRoutes.HOME) },
+                onMedecins = { navController.navigate(AppRoutes.DOCTORS) },
+                onRdv = { navController.navigate(AppRoutes.APPOINTMENTS) },
+                onProfil = { navController.navigate(AppRoutes.PROFILE) },
             )
         }
 

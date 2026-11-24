@@ -1,5 +1,6 @@
 package com.clinic.copilot.feature.triage.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -23,10 +25,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -55,19 +61,17 @@ import com.clinic.copilot.feature.triage.domain.TriageRole
 import com.clinic.copilot.ui.theme.ChatColors
 
 /**
- * Écran de triage IA – Membre 2, écran 2/2.
+ * Écran de triage IA – Membre 2 (US-70 & US-71).
  *
- * Maquette : avertissement vital, header mascotte certifié HDS,
- * badge sévérité, bulles de chat patient + IA, suggestions rapides,
- * saisie avec envoi, médecins disponibles en bas.
- *
- * @param onRetour Navigation retour vers l'accueil.
- * @param viewModel ViewModel injecté par Hilt.
+ * @param onRetour         Navigation retour vers l'accueil.
+ * @param onAllerAnnuaire  Navigation vers l'annuaire des médecins avec pré-filtrage de spécialité.
+ * @param viewModel        ViewModel injecté par Hilt.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TriageScreen(
     onRetour: () -> Unit,
+    onAllerAnnuaire: (String?) -> Unit = {},
     viewModel: TriageViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -83,11 +87,12 @@ fun TriageScreen(
         containerColor = ChatColors.medicalBackground,
         topBar = {
             Column {
-                // ── Bandeau AVERTISSEMENT VITAL ───────────────────────────
+                // ── Bandeau AVERTISSEMENT VITAL avec protection de barre de statut ──
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color(0xFFFDE8E8))
+                        .statusBarsPadding()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -99,14 +104,15 @@ fun TriageScreen(
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            text = "AVERTISSEMENT VITAL · L'IA ne remplace pas un médecin. En cas...",
+                            text = "AVERTISSEMENT VITAL · L'IA ne remplace pas un médecin. En cas d'urgence grave :",
                             fontSize = 11.sp,
                             color = ChatColors.urgenceCritique,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.weight(1f),
                         )
+                        Spacer(Modifier.width(6.dp))
                         Button(
-                            onClick = { /* tel:15 */ },
+                            onClick = { /* appel urgence 15 */ },
                             colors = ButtonDefaults.buttonColors(containerColor = ChatColors.urgenceCritique),
                             shape = RoundedCornerShape(8.dp),
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
@@ -126,10 +132,15 @@ fun TriageScreen(
                     title = {
                         Column {
                             Text(
-                                "Triage la Copilot",
+                                "Triage IA Copilot",
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = ChatColors.primaryNavy,
+                            )
+                            Text(
+                                "Orientation clinique intelligente",
+                                fontSize = 11.sp,
+                                color = ChatColors.textSecondary,
                             )
                         }
                     },
@@ -158,18 +169,16 @@ fun TriageScreen(
                         Text("Clinic Copilot", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = ChatColors.primaryNavy)
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Shield, contentDescription = null, tint = ChatColors.validationSucces, modifier = Modifier.size(12.dp))
-                            Spacer(Modifier.width(3.dp))
-                            Text("IA Certifiée Santé", fontSize = 11.sp, color = ChatColors.validationSucces)
-                            Text(" · ", color = ChatColors.textSecondary, fontSize = 11.sp)
-                            Text("Triage clinique guidé · Données HDS ch...", fontSize = 11.sp, color = ChatColors.textSecondary)
+                            Spacer(Modifier.width(4.dp))
+                            Text("IA Certifiée Santé · Données HDS chiffrées", fontSize = 11.sp, color = ChatColors.textSecondary)
                         }
                     }
                 }
 
-                // ── Badge sévérité (si détecté) ───────────────────────────
-                val lastSeverite = uiState.messages.lastOrNull { it.severite != null }?.severite
-                if (lastSeverite != null) {
-                    SeveriteBadge(lastSeverite)
+                // ── Bandeau sévérité dynamique (si le dernier message IA en a une) ──
+                val derniereSeverite = uiState.messages.lastOrNull { it.severite != null }?.severite
+                derniereSeverite?.let { sev ->
+                    BandeauSeverite(severite = sev)
                 }
             }
         },
@@ -181,53 +190,55 @@ fun TriageScreen(
                 creneaux = uiState.creneauxTrouves,
                 onSaisieChange = viewModel::mettreAJourSaisie,
                 onEnvoyer = viewModel::envoyerMessage,
+                onVoirMedecins = { onAllerAnnuaire(uiState.specialiteConclue) },
             )
         },
     ) { innerPadding ->
         LazyColumn(
             state = listState,
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .imePadding(),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             items(uiState.messages) { msg ->
-                BulleMessage(msg = msg, onSuggestion = viewModel::envoyerSuggestion)
+                BulleMessage(
+                    msg = msg,
+                    onSuggestion = viewModel::envoyerSuggestion,
+                    onAllerAnnuaire = onAllerAnnuaire,
+                )
             }
+
             if (uiState.isTyping) {
-                item {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        BulleDotAnimation()
-                    }
-                }
+                item { BulleDotAnimation() }
             }
         }
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Composants privés
-// ─────────────────────────────────────────────────────────────────────────────
-
 @Composable
-private fun SeveriteBadge(severite: NiveauSeverite) {
-    val (bg, fg) = when (severite) {
-        NiveauSeverite.CRITIQUE -> Pair(Color(0xFFFDE8E8), ChatColors.urgenceCritique)
-        NiveauSeverite.MODERE -> Pair(Color(0xFFFEF3E8), ChatColors.consultationUrgente)
-        NiveauSeverite.ROUTINIER -> Pair(Color(0xFFEAF5FF), ChatColors.primaryBlue)
-        NiveauSeverite.ACCOMPAGNEMENT -> Pair(Color(0xFFE6FAF8), ChatColors.turquoiseAccent)
+private fun BandeauSeverite(severite: NiveauSeverite) {
+    val bg = when (severite) {
+        NiveauSeverite.CRITIQUE -> Color(0xFFFDE8E8)
+        NiveauSeverite.MODERE -> Color(0xFFFEF3C7)
+        NiveauSeverite.ROUTINIER -> Color(0xFFEAF5FF)
+        NiveauSeverite.ACCOMPAGNEMENT -> Color(0xFFE6FFFA)
     }
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(bg)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Estimation de sévérité", fontSize = 12.sp, color = ChatColors.textSecondary)
-            Spacer(Modifier.width(8.dp))
+    val fg = when (severite) {
+        NiveauSeverite.CRITIQUE -> ChatColors.urgenceCritique
+        NiveauSeverite.MODERE -> Color(0xFFD97706)
+        NiveauSeverite.ROUTINIER -> ChatColors.primaryBlue
+        NiveauSeverite.ACCOMPAGNEMENT -> ChatColors.turquoiseAccent
+    }
+    Surface(color = bg, modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text("Évaluation préliminaire :", fontSize = 12.sp, color = ChatColors.textSecondary)
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
@@ -241,7 +252,11 @@ private fun SeveriteBadge(severite: NiveauSeverite) {
 }
 
 @Composable
-private fun BulleMessage(msg: TriageMessage, onSuggestion: (String) -> Unit) {
+private fun BulleMessage(
+    msg: TriageMessage,
+    onSuggestion: (String) -> Unit,
+    onAllerAnnuaire: (String?) -> Unit,
+) {
     val estUtilisateur = msg.role == TriageRole.UTILISATEUR
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -263,11 +278,12 @@ private fun BulleMessage(msg: TriageMessage, onSuggestion: (String) -> Unit) {
                 text = msg.contenu,
                 fontSize = 14.sp,
                 color = if (estUtilisateur) Color.White else ChatColors.textMain,
+                lineHeight = 20.sp,
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
             )
         }
 
-        // Suggestions rapides de l'IA
+        // Suggestions rapides de l'IA (puces)
         if (msg.suggestions.isNotEmpty()) {
             Spacer(Modifier.height(6.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -280,6 +296,69 @@ private fun BulleMessage(msg: TriageMessage, onSuggestion: (String) -> Unit) {
                             .padding(horizontal = 12.dp, vertical = 6.dp),
                     ) {
                         Text(sug, fontSize = 12.sp, color = ChatColors.primaryBlue, fontWeight = FontWeight.Medium)
+                    }
+                }
+            }
+        }
+
+        // ── BOUTON D'ORIENTATION VERS L'ANNUAIRE MÉDICAL (US-71) ───────────
+        if (msg.orientationActionTexte != null) {
+            Spacer(Modifier.height(10.dp))
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF0FDF4)),
+                border = BorderStroke(1.dp, Color(0xFF86EFAC)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF22C55E).copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                Icons.Default.People,
+                                contentDescription = null,
+                                tint = Color(0xFF15803D),
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                        Spacer(Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "Orientation : ${msg.orientationSpecialite ?: "Spécialiste"}",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                color = Color(0xFF15803D),
+                            )
+                            msg.medecinsDisponiblesTexte?.let {
+                                Text(text = it, fontSize = 11.sp, color = ChatColors.textSecondary)
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    Button(
+                        onClick = { onAllerAnnuaire(msg.orientationSpecialite) },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = ChatColors.primaryBlue),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            text = msg.orientationActionTexte,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp,
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                        )
                     }
                 }
             }
@@ -307,25 +386,39 @@ private fun SaisieBar(
     creneaux: Int,
     onSaisieChange: (String) -> Unit,
     onEnvoyer: () -> Unit,
+    onVoirMedecins: () -> Unit,
 ) {
     Surface(color = ChatColors.cardSurface, shadowElevation = 8.dp) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
-            // Info médecins disponibles
+            // Info médecins disponibles avec clic direct
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onVoirMedecins)
+                    .padding(vertical = 2.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     "Médecins disponibles aujourd'hui",
                     fontSize = 12.sp,
                     color = ChatColors.textSecondary,
                 )
-                Text(
-                    "$medecinsDisponibles médecins · $creneaux créneaux trouvés",
-                    fontSize = 12.sp,
-                    color = ChatColors.validationSucces,
-                    fontWeight = FontWeight.SemiBold,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "$medecinsDisponibles médecins · $creneaux créneaux",
+                        fontSize = 12.sp,
+                        color = ChatColors.validationSucces,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = ChatColors.validationSucces,
+                        modifier = Modifier.size(12.dp),
+                    )
+                }
             }
             Spacer(Modifier.height(8.dp))
 

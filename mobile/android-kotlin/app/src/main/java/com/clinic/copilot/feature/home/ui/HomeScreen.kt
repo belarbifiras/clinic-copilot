@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
@@ -35,6 +36,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -115,6 +117,34 @@ fun HomeScreen(
                         }
                     }
                 },
+                actions = {
+                    IconButton(onClick = { viewModel.toggleNotificationsDialog(true) }) {
+                        Box {
+                            Icon(
+                                androidx.compose.material.icons.Icons.Default.Notifications,
+                                contentDescription = "Notifications",
+                                tint = ChatColors.primaryNavy,
+                            )
+                            if (uiState.notificationsNonLues > 0) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .align(Alignment.TopEnd)
+                                        .clip(CircleShape)
+                                        .background(ChatColors.urgenceCritique),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        text = "${uiState.notificationsNonLues}",
+                                        color = Color.White,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = ChatColors.cardSurface),
             )
         },
@@ -177,6 +207,15 @@ fun HomeScreen(
 
             // ── Médicaments du jour ───────────────────────────────────────
             item { MedicamentsSection(meds = data.medicamentsJour, onValider = viewModel::validerPriseMedicament) }
+        }
+
+        if (uiState.showNotificationsDialog) {
+            com.clinic.copilot.feature.notifications.ui.NotificationsDialog(
+                notifications = uiState.notifications,
+                onDismiss = { viewModel.toggleNotificationsDialog(false) },
+                onMarquerLue = viewModel::marquerNotificationLue,
+                onToutMarquerLu = { viewModel.toggleNotificationsDialog(false) },
+            )
         }
     }
 }
