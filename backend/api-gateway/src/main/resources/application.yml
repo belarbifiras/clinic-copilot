@@ -136,7 +136,8 @@ management:
   opentelemetry:
     tracing:
       export:
-        endpoint: ${OTLP_TRACING_ENDPOINT:http://localhost:4318/v1/traces}
+        otlp:
+          endpoint: ${OTLP_TRACING_ENDPOINT:http://localhost:4318/v1/traces}
   otlp:
     metrics:
       export:
