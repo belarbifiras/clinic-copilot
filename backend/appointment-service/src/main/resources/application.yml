@@ -34,6 +34,18 @@ services:
   doctor-directory:
     url: ${DOCTOR_DIRECTORY_URL:http://localhost:8082}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${OTLP_TRACING_ENDPOINT:http://localhost:4318/v1/traces}
+
 # --- RabbitMQ configuration ---
 app:
   rabbitmq:

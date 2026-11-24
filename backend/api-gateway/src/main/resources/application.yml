@@ -118,7 +118,7 @@ spring:
                 - Path=/api/doctors/**
                         # Assistant IA (triage)
             - id: ai-assessment
-              uri: ${AI_ASSESSMENT_URL:http://localhost:8083}
+              uri: lb://ai-assessment-service
               predicates:
                 - Path=/api/triage/**
               filters:
@@ -128,7 +128,20 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,gateway
+        include: health,gateway,prometheus 
+       
+  tracing:
+    sampling:
+      probability: 1.0
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTLP_TRACING_ENDPOINT:http://localhost:4318/v1/traces}
+  otlp:
+    metrics:
+      export:
+        enabled: false
 
 eureka:
   client:
