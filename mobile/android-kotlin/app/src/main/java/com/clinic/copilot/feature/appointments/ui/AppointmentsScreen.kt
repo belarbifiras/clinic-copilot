@@ -118,9 +118,11 @@ fun AppointmentsScreen(
         bottomBar = {
             HomeBottomBar(
                 selected = "RDV",
+                onAccueil = onAccueil,
                 onMessages = onMessages,
                 onMedecins = onMedecins,
                 onRdv = {},
+                onProfil = onProfil,
             )
         },
     ) { innerPadding ->

@@ -111,9 +111,11 @@ fun DoctorsScreen(
         bottomBar = {
             HomeBottomBar(
                 selected = "Médecins",
+                onAccueil = onAccueil,
                 onMessages = onMessages,
                 onMedecins = {},
                 onRdv = onRdv,
+                onProfil = onProfil,
             )
         },
     ) { innerPadding ->
