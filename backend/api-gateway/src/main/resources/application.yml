@@ -118,9 +118,9 @@ spring:
                 - Path=/api/doctors/**
                         # Assistant IA (triage)
             - id: ai-assessment
-              uri: ${AI_ASSESSMENT_URL:http://localhost:8083}
+              uri: lb://ai-assessment-service
               predicates:
-                - Path=/triage/sessions
+                - Path=/api/triage/**
               filters:
                 - StripPrefix=1
 
@@ -128,8 +128,8 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,prometheus        # ajoute prometheus à la liste existante
-  # ... tes autres clés existantes restent ici ...
+        include: health,gateway,prometheus 
+       
   tracing:
     sampling:
       probability: 1.0

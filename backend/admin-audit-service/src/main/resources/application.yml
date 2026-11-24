@@ -23,8 +23,8 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,prometheus        # ajoute prometheus à la liste existante
-  # ... tes autres clés existantes restent ici ...
+        include: health,prometheus      
+  
   tracing:
     sampling:
       probability: 1.0
