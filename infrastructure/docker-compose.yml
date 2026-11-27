@@ -376,10 +376,13 @@ services:
       JAVA_TOOL_OPTIONS: -Xmx256m
       EUREKA_URL: http://eureka-server:8761/eureka
       OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
+      CONFIG_SERVER_URL: http://config-server:8888
     depends_on:
       postgres:
         condition: service_healthy
       eureka-server:
+        condition: service_healthy
+      config-server:
         condition: service_healthy
 
   admin-audit-service:
